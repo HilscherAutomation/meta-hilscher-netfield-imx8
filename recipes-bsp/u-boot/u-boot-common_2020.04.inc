@@ -15,6 +15,7 @@ SRC_URI_append += " \
 	file://1011-drivers-net-phy-Add-devicetree-support-for-the-max-s.patch \
 	file://1012-cmd-mii-Fix-wrong-mii-info-message-related-to-PHY-st.patch \
 	file://pxe_add_bootargs_append_func.patch \
+	file://machine_config.h \
 	file://defconfig \
 	"
 
@@ -72,6 +73,8 @@ export_devicetree_settings() {
 
 do_configure[depends] += "virtual/dtb:do_populate_sysroot"
 do_configure_prepend() {
+	cat ${WORKDIR}/machine_config.h > ${S}/include/configs/hilscher-ucm-imx8m-mini.h
+
 	export_devicetree_settings -v
 
 	# Replace/Create machine defconfig by defconfig provided by this recipe.
