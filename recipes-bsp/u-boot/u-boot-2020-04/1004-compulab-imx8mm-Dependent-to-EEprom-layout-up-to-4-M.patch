@@ -1,0 +1,182 @@
+From 87ea034cc62d187f6d65ac7b0cba035ca792f559 Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Fri, 6 Nov 2020 11:50:53 +0100
+Subject: [PATCH 4/6] compulab-imx8mm: Dependent to EEprom layout, up to 4 MAC
+ addresses are read out and defined as environment variables.
+
+---
+ board/compulab/common/eeprom.c                | 68 ++++++++++++++++---
+ board/compulab/common/eeprom.h                |  1 +
+ board/compulab/plat/imx8mm/board/Makefile     |  1 +
+ .../compulab/plat/imx8mm/board/board_addon.c  | 45 ++++++++++++
+ 4 files changed, 105 insertions(+), 10 deletions(-)
+ create mode 100644 board/compulab/plat/imx8mm/board/board_addon.c
+
+diff --git a/board/compulab/common/eeprom.c b/board/compulab/common/eeprom.c
+index ebcafac04b..7a0781e8b9 100644
+--- a/board/compulab/common/eeprom.c
++++ b/board/compulab/common/eeprom.c
+@@ -44,10 +44,18 @@
+ #define PRODUCT_NAME_OFFSET		128
+ #define PRODUCT_NAME_SIZE		16
+ #define MAC_ADDR_OFFSET			4
+-#define MAC_ADDR_OFFSET_LEGACY		0
+-
+-#define LAYOUT_INVALID	0
+-#define LAYOUT_LEGACY	0xff
++#define MAC_ADDR_OFFSET_LEGACY	0
++#define MAC_ADDR2_OFFSET		10
++#define MAC_ADDR3_OFFSET		32
++#define MAC_ADDR4_OFFSET		38
++
++#define LAYOUT_INVALID			0
++#define	LAYOUT_VERSION_LEGACY	1
++#define	LAYOUT_VERSION_VER1		2
++#define	LAYOUT_VERSION_VER2		3
++#define	LAYOUT_VERSION_VER3		4
++#define	LAYOUT_VERSION_VER4		5
++#define LAYOUT_LEGACY			0xff
+ 
+ static int cl_eeprom_layout; /* Implicitly LAYOUT_INVALID */
+ 
+@@ -157,6 +165,52 @@ void cpl_get_board_serial(struct tag_serialnr *serialnr)
+ 	}
+ }
+ 
++/*
++ * Routine: cl_eeprom_read_mac_addr_x
++ * Description: read mac address X and store it in buf.
++ */
++int cl_eeprom_read_mac_addr_x(uchar *buf, uint eeprom_bus __attribute__((unused)), int x)
++{
++	uint offset;
++	int err;
++
++	err = cl_eeprom_setup(&eeprom_som);
++	if (err)
++		return err;
++
++	x = (x<<8) | cl_eeprom_layout;
++	switch (x) {
++		case LAYOUT_LEGACY:
++			offset = MAC_ADDR_OFFSET_LEGACY;
++			break;
++		case LAYOUT_VERSION_VER1:
++		case LAYOUT_VERSION_VER2:
++		case LAYOUT_VERSION_VER3:
++			offset = MAC_ADDR_OFFSET;
++			break;
++		case (0x100 | LAYOUT_VERSION_VER1):
++		case (0x100 | LAYOUT_VERSION_VER2):
++		case (0x100 | LAYOUT_VERSION_VER3):
++			offset = MAC_ADDR2_OFFSET;
++			break;
++		case (0x200 | LAYOUT_VERSION_VER2):
++		case (0x200 | LAYOUT_VERSION_VER3):
++			offset = MAC_ADDR3_OFFSET;
++			break;
++		case (0x300 | LAYOUT_VERSION_VER2):
++		case (0x300 | LAYOUT_VERSION_VER3):
++			offset = MAC_ADDR4_OFFSET;
++			break;
++		default:
++			err = -1;
++	}
++
++	if (err)
++		return err;
++
++	return cl_eeprom_read(offset, buf, 6);
++}
++
+ /*
+  * Routine: cl_eeprom_read_mac_addr
+  * Description: read mac address and store it in buf.
+@@ -473,12 +527,6 @@ int eeprom_field_update_date(struct eeprom_field *field, uchar *fbuf,
+ 	return 0;
+ }
+ 
+-#define	LAYOUT_VERSION_LEGACY 1
+-#define	LAYOUT_VERSION_VER1 2
+-#define	LAYOUT_VERSION_VER2 3
+-#define	LAYOUT_VERSION_VER3 4
+-#define	LAYOUT_VERSION_VER4 5
+-
+ extern struct eeprom_field layout_unknown[1];
+ 
+ #define DEFINE_FIELD_FUNC(x) eeprom_field_print_##x, eeprom_field_update_##x, \
+diff --git a/board/compulab/common/eeprom.h b/board/compulab/common/eeprom.h
+index d366f59288..4c926cc047 100644
+--- a/board/compulab/common/eeprom.h
++++ b/board/compulab/common/eeprom.h
+@@ -13,6 +13,7 @@
+ 
+ #if (defined(CONFIG_SYS_I2C) || defined(CONFIG_DM_I2C))
+ int cl_eeprom_read_mac_addr(uchar *buf, uint eeprom_bus);
++int cl_eeprom_read_mac_addr_x(uchar *buf, uint eeprom_bus, int x);
+ u32 cl_eeprom_get_board_rev(uint eeprom_bus);
+ int cl_eeprom_get_product_name(uchar *buf, uint eeprom_bus);
+ void cl_eeprom_get_suite(char* buf);
+diff --git a/board/compulab/plat/imx8mm/board/Makefile b/board/compulab/plat/imx8mm/board/Makefile
+index 8c50727052..a6de1c09bb 100644
+--- a/board/compulab/plat/imx8mm/board/Makefile
++++ b/board/compulab/plat/imx8mm/board/Makefile
+@@ -2,3 +2,4 @@ ccflags-y += -I$(srctree)/board/compulab/
+ ccflags-y += -I$(srctree)/board/compulab/plat/imx8mm/
+ 
+ obj-y += board.o
++obj-y += board_addon.o
+diff --git a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
+new file mode 100644
+index 0000000000..bb0498bb63
+--- /dev/null
++++ b/board/compulab/plat/imx8mm/board/board_addon.c
+@@ -0,0 +1,45 @@
++/*
++ * Copyright 2020 Hilscher Gesellschaft fuer Systemautomation mbH 
++ *
++ * SPDX-License-Identifier:	GPL-2.0
++ */
++
++#include <common.h>
++
++DECLARE_GLOBAL_DATA_PTR;
++
++static int setup_mac_address_x(int x)
++{
++	int ret;
++	char enetvar[9];
++	unsigned char enetaddr[6];
++
++	sprintf(enetvar, x ? "eth%daddr" : "ethaddr", x);
++
++	ret = eth_env_get_enetaddr(enetvar, enetaddr);
++	if (ret)
++		return 0;
++
++	ret = cl_eeprom_read_mac_addr_x(enetaddr, CONFIG_SYS_I2C_EEPROM_BUS,x);
++	if (ret)
++		return -1;
++
++	ret = is_valid_ethaddr(enetaddr);
++	if (!ret)
++		return -1;
++
++	return eth_env_set_enetaddr(enetvar, enetaddr);
++}
++
++int misc_init_r(void)
++{
++	int x, ret;
++
++	for (x=0; x<4; x++) {
++		ret = setup_mac_address_x(x);
++		if (ret)
++			debug("%s: Can't set mac_address for ethernet%d\n", __func__, x);
++	}
++
++	return 0;
++}
+-- 
+2.17.1
+

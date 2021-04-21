@@ -1,0 +1,70 @@
+From 10ff42676bf3f7f9fccbaf39dbc85adcbe197421 Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Wed, 31 Mar 2021 15:41:50 +0200
+Subject: [PATCH] drivers/net/phy: Add devicetree support for the max-speed
+ property.
+
+---
+ drivers/net/phy/atheros.c |  3 +--
+ drivers/net/phy/phy.c     | 26 ++++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/phy/atheros.c b/drivers/net/phy/atheros.c
+index f27937f5ad..50aa0d98c1 100644
+--- a/drivers/net/phy/atheros.c
++++ b/drivers/net/phy/atheros.c
+@@ -152,8 +152,7 @@ static int ar8031_config(struct phy_device *phydev)
+ 
+ 	phydev->supported = phydev->drv->features;
+ 
+-	genphy_config_aneg(phydev);
+-	genphy_restart_aneg(phydev);
++	genphy_config(phydev);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/phy/phy.c b/drivers/net/phy/phy.c
+index 505d3ab659..aedbf6abb4 100644
+--- a/drivers/net/phy/phy.c
++++ b/drivers/net/phy/phy.c
+@@ -379,11 +379,37 @@ int genphy_parse_link(struct phy_device *phydev)
+ 	return 0;
+ }
+ 
++int of_set_phy_supported(struct phy_device *phydev)
++{
++	struct ofnode_phandle_args phandle_args;
++	u32 max_speed;
++	int ret;
++
++	if (dev_read_phandle_with_args(phydev->dev, "phy-handle", NULL, 0, 0, &phandle_args))
++		return -ENODEV;
++
++	ret = ofnode_read_u32(phandle_args.node, "max-speed", &max_speed);
++	if (ret)
++		return ret;
++	ret = phy_set_supported(phydev, max_speed);
++	if (ret)
++		return ret;
++
++	debug("%s: max-speed = %dMbps\n", phydev->dev->name, max_speed);
++
++	return 0;
++}
++
+ int genphy_config(struct phy_device *phydev)
+ {
+ 	int val;
+ 	u32 features;
+ 
++	if (!of_set_phy_supported(phydev)) {
++		genphy_config_aneg(phydev);
++		return 0;
++	}
++
+ 	features = (SUPPORTED_TP | SUPPORTED_MII
+ 			| SUPPORTED_AUI | SUPPORTED_FIBRE |
+ 			SUPPORTED_BNC);
+-- 
+2.17.1
+

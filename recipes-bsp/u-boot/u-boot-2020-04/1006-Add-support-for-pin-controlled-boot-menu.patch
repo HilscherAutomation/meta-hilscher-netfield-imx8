@@ -1,0 +1,454 @@
+From 26009de8e0cc4f44a62118067e57b829e2f930cf Mon Sep 17 00:00:00 2001
+From: Sebastian Doell <sdoell@hilscher.com>
+Date: Wed, 10 Mar 2021 12:55:21 +0000
+Subject: [PATCH] Add support for pin controlled boot menu.
+
+---
+ board/compulab/plat/imx8mm/board/board.c      |   7 +-
+ .../compulab/plat/imx8mm/board/board_addon.c  | 113 ++++++++++++++++--
+ cmd/bootmenu.c                                |  78 ++++++------
+ drivers/fastboot/fb_mmc.c                     |  12 ++
+ include/configs/hilscher-ucm-imx8m-mini.h     |  46 ++++++-
+ 5 files changed, 210 insertions(+), 46 deletions(-)
+
+diff --git a/board/compulab/plat/imx8mm/board/board.c b/board/compulab/plat/imx8mm/board/board.c
+index 0caa4dc1b8..48520b0cfb 100644
+--- a/board/compulab/plat/imx8mm/board/board.c
++++ b/board/compulab/plat/imx8mm/board/board.c
+@@ -252,7 +252,12 @@ int board_mmc_get_env_dev(int devno)
+ 		printf("User Environment dev# is (%lu)\n", user_env_devno);
+ 		return (int)user_env_devno;
+ 	}
+-	return devno;
++	/* mach-imx/imx8/cpu.c passes devno as follows
++	     0 = SC_R_SDHC_0 (not available on our boards)
++	     1 = SC_R_SDHC_1 (mmc0 for our boards)
++	     2 = SC_R_SDHC_2 (mmc1 for our boards)
++	   thus we need to adjust devno */
++	return devno - 1;
+ }
+ 
+ static int _mmc_get_env_part(struct mmc *mmc)
+diff --git a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
+index 088ae05479..b4b70a676a 100644
+--- a/board/compulab/plat/imx8mm/board/board_addon.c
++++ b/board/compulab/plat/imx8mm/board/board_addon.c
+@@ -6,9 +6,12 @@
+ 
+ #include <common.h>
+ #include <led.h>
++#include <asm-generic/gpio.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
++#ifdef CONFIG_LED
++
+ static int led_test_on_off(int duration_ms)
+ {
+ 	struct udevice *dev;
+@@ -47,7 +50,7 @@ static int test_system_leds(void)
+ 	return 0;
+ }
+ 
+-static int init_system_status_led(void)
++static int init_system_status_led(int state)
+ {
+ 	struct udevice *dev;
+ 	char *led_name;
+@@ -59,7 +62,7 @@ static int init_system_status_led(void)
+ 		if (ret)
+ 			return ret;
+ 
+-		ret = led_set_state(dev, LEDST_ON);
++		ret = led_set_state(dev, state);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -67,6 +70,102 @@ static int init_system_status_led(void)
+ 	return 0;
+ }
+ 
++#else
++
++static int test_system_leds(void)
++{
++	return 0;
++}
++
++static int init_system_status_led(int state)
++{
++	return 0;
++}
++
++#endif
++
++static int init_boot_mode(void)
++{
++	int config_offset;
++	ofnode config_node;
++	struct gpio_desc gpio;
++	int cnt = 0;
++	char buf[10];
++	int ret;
++	unsigned long menu_duration = 1;
++	unsigned long menu_max = 10;
++
++	config_offset = fdt_path_offset(gd->fdt_blob, "/config");
++	config_node = offset_to_ofnode(config_offset);
++
++	ret = gpio_request_by_name_nodev(config_node, "u-boot,recovery-gpio", 0, &gpio, 0);
++	if (ret)
++		return ret;
++
++	env_set("boot_mode", "0");
++
++	/* check validity of variables to make sure setup always allows control by user */
++	menu_duration = env_get_ulong("menud", 10, 1);
++	menu_duration = (menu_duration > 5) ? 5 : menu_duration;
++	menu_max = env_get_ulong("menum", 10, 1);
++	menu_max = (menu_max < 1) ? 1 : menu_max;
++
++	/* check if user triggers menu pin */
++	while ( (dm_gpio_get_value(&gpio)) && (cnt < menu_max) ) {
++		/* We need to disable the LED once at the beginning, since it might be on */
++                /* already so add a delay as well, to be able to see first light signal.  */
++		if (cnt == 0) {
++			init_system_status_led(LEDST_OFF);
++			mdelay(1000);
++		}
++		/* increase and store menu counter */
++		cnt++;
++		sprintf(buf, "%d", cnt);
++
++		/* signal menu step via led */
++		env_set("boot_mode", buf);
++		init_system_status_led(LEDST_ON);
++		mdelay(100);
++		init_system_status_led(LEDST_OFF);
++
++		/* wait x second(s) to make sure user has a chance to unset pin after signalling */
++		mdelay(menu_duration*1000);
++	}
++	if (cnt >= menu_max) {
++		/* The last menu entry is always console. Some devices do not provide serial     */
++		/* console so we need to start netCONSOLE - this need to be done in a precommand */
++                /* to be able to stop autoboot, because of the pw-protection.                    */
++		init_system_status_led(LEDST_ON);
++		if ( env_get("menu_last_cmd") != NULL ) {
++			env_set("preboot", "run menu_last_cmd");
++		}
++	} else {
++		led_default_state();
++	}
++	return 0;
++}
++
++static void init_fastboot_variables()
++{
++	const char* model = NULL;
++	char cpu_name[64];
++	u32 cpurev = get_cpu_rev();
++
++	model = fdt_getprop(gd->fdt_blob, 0, "model", NULL);
++	snprintf(cpu_name, sizeof(cpu_name), "Freescale i.MX%s rev%d.%d",
++		get_imx_type((cpurev & 0xFF000) >> 12), (cpurev & 0x000F0) >> 4, (cpurev & 0x0000F) >> 0);
++
++	if(model)
++		env_set("board", model);
++	env_set("platform", cpu_name);
++	//env_set("fastboot.serialno", );
++#if defined(CONFIG_FIT_SIGNATURE) && !defined(CONFIG_LEGACY_IMAGE_FORMAT)
++	env_set("fastboot.secure", "yes");
++else
++	env_set("fastboot.secure", "no");
++#endif
++}
++
+ static int setup_mac_address_x(int x)
+ {
+ 	int ret;
+@@ -94,11 +193,11 @@ int misc_init_r(void)
+ {
+ 	int x, ret;
+ 
+-	if (IS_ENABLED(CONFIG_LED)) {
+-		test_system_leds();
+-		led_default_state();
+-		init_system_status_led();
+-	}
++	test_system_leds();
++	led_default_state();
++	init_system_status_led(LEDST_ON);
++	init_boot_mode();
++	init_fastboot_variables();
+ 
+ 	for (x=0; x<4; x++) {
+ 		ret = setup_mac_address_x(x);
+diff --git a/cmd/bootmenu.c b/cmd/bootmenu.c
+index 3dc2c854ac..1d79e773fd 100644
+--- a/cmd/bootmenu.c
++++ b/cmd/bootmenu.c
+@@ -185,6 +185,8 @@ static void bootmenu_loop(struct bootmenu_data *menu,
+ 	/* enter key was pressed */
+ 	if (c == '\r')
+ 		*key = KEY_SELECT;
++	if (c == 0xA) /* netconsole sends only line feed in boot menu, so check for 0xA */
++		*key = KEY_SELECT;
+ }
+ 
+ static char *bootmenu_choice_entry(void *data)
+@@ -245,7 +247,7 @@ static void bootmenu_destroy(struct bootmenu_data *menu)
+ 	free(menu);
+ }
+ 
+-static struct bootmenu_data *bootmenu_create(int delay)
++static struct bootmenu_data *bootmenu_create(int delay, int console)
+ {
+ 	unsigned short int i = 0;
+ 	const char *option;
+@@ -317,40 +319,41 @@ static struct bootmenu_data *bootmenu_create(int delay)
+ 			break;
+ 	}
+ 
+-	/* Add U-Boot console entry at the end */
+-	if (i <= MAX_COUNT - 1) {
+-		entry = malloc(sizeof(struct bootmenu_entry));
+-		if (!entry)
+-			goto cleanup;
+-
+-		entry->title = strdup("U-Boot console");
+-		if (!entry->title) {
+-			free(entry);
+-			goto cleanup;
+-		}
++	if (console != 0) {
++		/* Add U-Boot console entry at the end */
++		if (i <= MAX_COUNT - 1) {
++			entry = malloc(sizeof(struct bootmenu_entry));
++			if (!entry)
++				goto cleanup;
++
++			entry->title = strdup("U-Boot console");
++			if (!entry->title) {
++				free(entry);
++				goto cleanup;
++			}
+ 
+-		entry->command = strdup("");
+-		if (!entry->command) {
+-			free(entry->title);
+-			free(entry);
+-			goto cleanup;
+-		}
++			entry->command = strdup("");
++			if (!entry->command) {
++				free(entry->title);
++				free(entry);
++				goto cleanup;
++			}
+ 
+-		sprintf(entry->key, "%d", i);
++			sprintf(entry->key, "%d", i);
+ 
+-		entry->num = i;
+-		entry->menu = menu;
+-		entry->next = NULL;
++			entry->num = i;
++			entry->menu = menu;
++			entry->next = NULL;
+ 
+-		if (!iter)
+-			menu->first = entry;
+-		else
+-			iter->next = entry;
++			if (!iter)
++				menu->first = entry;
++			else
++				iter->next = entry;
+ 
+-		iter = entry;
+-		++i;
++			iter = entry;
++			++i;
++		}
+ 	}
+-
+ 	menu->count = i;
+ 
+ 	if ((menu->active >= menu->count)||(menu->active < 0)) { //ensure active menuitem is inside menu
+@@ -365,7 +368,7 @@ cleanup:
+ 	return NULL;
+ }
+ 
+-static void bootmenu_show(int delay)
++static void bootmenu_show(int delay, int console)
+ {
+ 	int init = 0;
+ 	void *choice = NULL;
+@@ -392,7 +395,7 @@ static void bootmenu_show(int delay)
+ 		return;
+ 	}
+ 
+-	bootmenu = bootmenu_create(delay);
++	bootmenu = bootmenu_create(delay, console);
+ 	if (!bootmenu)
+ 		return;
+ 
+@@ -474,9 +477,9 @@ void menu_display_statusline(struct menu *m)
+ }
+ 
+ #ifdef CONFIG_AUTOBOOT_MENU_SHOW
+-int menu_show(int bootdelay)
++int menu_show(int bootdelay, int console)
+ {
+-	bootmenu_show(bootdelay);
++	bootmenu_show(bootdelay, console);
+ 	return -1; /* -1 - abort boot and run monitor code */
+ }
+ #endif
+@@ -485,6 +488,7 @@ int do_bootmenu(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+ {
+ 	char *delay_str = NULL;
+ 	int delay = 10;
++	int console = 0;
+ 
+ #if defined(CONFIG_BOOTDELAY) && (CONFIG_BOOTDELAY >= 0)
+ 	delay = CONFIG_BOOTDELAY;
+@@ -493,19 +497,23 @@ int do_bootmenu(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+ 	if (argc >= 2)
+ 		delay_str = argv[1];
+ 
++	if (argc >= 3)
++		console = (strcmp(argv[2],"0") == 0) ? 0 : 1;
++
+ 	if (!delay_str)
+ 		delay_str = env_get("bootmenu_delay");
+ 
+ 	if (delay_str)
+ 		delay = (int)simple_strtol(delay_str, NULL, 10);
+ 
+-	bootmenu_show(delay);
++	bootmenu_show(delay, console);
+ 	return 0;
+ }
+ 
+ U_BOOT_CMD(
+-	bootmenu, 2, 1, do_bootmenu,
++	bootmenu, 3, 1, do_bootmenu,
+ 	"ANSI terminal bootmenu",
+ 	"[delay]\n"
++	"[0/1] add console entry\n"
+ 	"    - show ANSI terminal bootmenu with autoboot delay"
+ );
+diff --git a/drivers/fastboot/fb_mmc.c b/drivers/fastboot/fb_mmc.c
+index d7cf9f4aac..ccacd23432 100644
+--- a/drivers/fastboot/fb_mmc.c
++++ b/drivers/fastboot/fb_mmc.c
+@@ -471,6 +471,18 @@ void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
+ 	}
+ #endif
+ 
++	if (strcmp(cmd, "bootloader") == 0) {
++		info.blksz = dev_desc->blksz;
++		info.start = (33 * SZ_1K) / info.blksz;
++		info.size  = (2 * SZ_1M) / info.blksz;
++		printf("%s: updating bootloader\n", __func__);
++		write_raw_image(dev_desc, &info, cmd, download_buffer,
++				download_bytes, response);
++		printf("........ success\n");
++		fastboot_okay(NULL, response);
++		return;
++	}
++
+ #ifdef CONFIG_ANDROID_BOOT_IMAGE
+ 	if (strncasecmp(cmd, "zimage", 6) == 0) {
+ 		fb_mmc_update_zimage(dev_desc, download_buffer,
+diff --git a/include/configs/hilscher-ucm-imx8m-mini.h b/include/configs/hilscher-ucm-imx8m-mini.h
+index 8d0173de67..2c6d888807 100644
+--- a/include/configs/hilscher-ucm-imx8m-mini.h
++++ b/include/configs/hilscher-ucm-imx8m-mini.h
+@@ -8,12 +8,24 @@
+ 	"loadbootscript="LOAD_BOOT_SCRIPT"\0" \
+ 	"bootscript="RUN_BOOT_SCRIPT"\0" \
+ 	"loadimage="LOAD_IMAGE"\0" \
++	"fastboot="FASTBOOT_SCRIPT"\0" \
+ 	"netboot="NETBOOT_SCRIPT"\0" \
+ 	"initrd_high=0x50000000\0" \
+ 	"fdt_high=0x48000000\0" \
++	"pxe_setup="PXEBOOT_SETUP"\0" \
++	"bootcmd_pxe="PXEBOOT_COMMAND"\0" \
++	"netcon_ip=192.168.253.1\0" \
++	"netcon_cl=192.168.253.2\0" \
++	"netcon_up="NETCON_ENABLE"\0" \
++	"netcon_down="SERIALCON_ENABLE"\0" \
++	"menu_last_cmd=setenv bootdelay 15; run netcon_up;\0" \
++	"menum=2\0" \
+ 
+ #define CONFIG_BOOTCOMMAND BOOTCOMMAND_SCRIPT
+ #define BOOTCOMMAND_SCRIPT \
++	"if test \"${boot_mode}\" = \"1\"; then " \
++		"run fastboot; " \
++	"fi; " \
+ 	"mmc dev ${mmcdev}; " \
+ 	"if mmc rescan; then " \
+ 		"if run loadbootscript; then " \
+@@ -21,13 +33,15 @@
+ 		"else " \
+ 			"if run loadimage; then " \
+ 				"run mmcboot; " \
+-			"else " \
+-				"run netboot; " \
+ 			"fi; " \
+ 		"fi; " \
+ 	"else " \
+ 		"booti ${loadaddr} - ${fdt_addr}; " \
+ 	"fi; " \
++	"while true; do " \
++		"run pxe_setup; " \
++		"run bootcmd_pxe; " \
++	"done; " \
+ 
+ #define LOAD_BOOT_SCRIPT \
+ 	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};" \
+@@ -37,7 +51,17 @@
+ 
+ #define LOAD_IMAGE \
+ 	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image};" \
+-	
++
++#define FASTBOOT_SIMPLE \
++	"while true; do setenv ipaddr 192.168.253.1; fastboot udp; done;" \
++
++#define FASTBOOT_SCRIPT \
++	"echo IP: 192.168.253.1;" \
++	"echo Disabling netCONSOLE...;" \
++	"run netcon_down;" \
++	"sleep 2;" \
++	"while true; do setenv ipaddr 192.168.253.1; fastboot udp; done;" \
++
+ #define NETBOOT_SCRIPT \
+ 	"netboot=echo Booting from net ...; " \
+ 	"run netargs;  " \
+@@ -57,3 +81,19 @@
+ 		"booti; " \
+ 	"fi; " \
+ 
++#define PXEBOOT_SETUP \
++	"setenv kernel_addr_r ${loadaddr};setenv ramdisk_addr_r ${loadaddr};setenv fdt_addr ${loadaddr};setenv pxefile_addr_r 0x70000000;setenv bootargs console=$console provisioning=1;" \
++
++#define PXEBOOT_COMMAND \
++	"dhcp; " \
++	"if test $? = 0; then " \
++		"if pxe get; then " \
++			"pxe boot; " \
++		"fi; " \
++	"fi; " \
++
++#define SERIALCON_ENABLE \
++	"setenv stdout serial; setenv stdin serial;" \
++
++#define NETCON_ENABLE \
++	"setenv ipaddr $netcon_ip;setenv ncip $netcon_cl;setenv stdout nc; setenv stdin nc;" \
+-- 
+2.17.1
+

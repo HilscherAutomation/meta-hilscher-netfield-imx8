@@ -1,0 +1,16 @@
+/dts-v1/;
+
+#include "niot-e-nfl90-q2n16-n-revx.dts"
+
+/ {
+	model = "niot-e-nfl90-q2n16-n-rev1";
+};
+
+/* Bluetooth LEDs are high active, not low-active as expected by signal name in schematics */
+&bt_blue {
+	gpios = <&gpio4 28 GPIO_ACTIVE_HIGH>;
+};
+
+&bt_red {
+	gpios = <&gpio5 2 GPIO_ACTIVE_HIGH>;
+};

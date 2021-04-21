@@ -1,0 +1,235 @@
+From aed4daadbdc63a16ca7ab2c47f4389a11627398a Mon Sep 17 00:00:00 2001
+From: Sebastian Doell <sdoell@hilscher.com>
+Date: Wed, 10 Mar 2021 15:57:09 +0000
+Subject: [PATCH] Add support of setting led default state, when leaving
+ u-boot.
+
+---
+ .../compulab/plat/imx8mm/board/board_addon.c  | 27 ++++++++------
+ cmd/led.c                                     |  6 ++--
+ drivers/led/led-uclass.c                      | 35 ++++++++++++++-----
+ include/configs/hilscher-ucm-imx8m-mini.h     |  2 ++
+ include/led.h                                 |  1 +
+ 5 files changed, 50 insertions(+), 21 deletions(-)
+
+diff --git a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
+index b4b70a676a..cff19fb217 100644
+--- a/board/compulab/plat/imx8mm/board/board_addon.c
++++ b/board/compulab/plat/imx8mm/board/board_addon.c
+@@ -50,24 +50,23 @@ static int test_system_leds(void)
+ 	return 0;
+ }
+ 
+-static int init_system_status_led(int state)
++static char* init_system_status_led(int state)
+ {
+ 	struct udevice *dev;
+-	char *led_name;
++	char *led_name = NULL;
+ 	int ret;
+ 
+ 	led_name = fdtdec_get_config_string(gd->fdt_blob, "u-boot,system-status-led");
+ 	if (led_name) {
+ 		ret = led_get_by_label(led_name, &dev);
+ 		if (ret)
+-			return ret;
++			return NULL;
+ 
+ 		ret = led_set_state(dev, state);
+ 		if (ret)
+-			return ret;
++			return NULL;
+ 	}
+-
+-	return 0;
++	return led_name;
+ }
+ 
+ #else
+@@ -77,9 +76,9 @@ static int test_system_leds(void)
+ 	return 0;
+ }
+ 
+-static int init_system_status_led(int state)
++static char* init_system_status_led(int state)
+ {
+-	return 0;
++	return NULL;
+ }
+ 
+ #endif
+@@ -90,10 +89,11 @@ static int init_boot_mode(void)
+ 	ofnode config_node;
+ 	struct gpio_desc gpio;
+ 	int cnt = 0;
+-	char buf[10];
++	char buf[128];
+ 	int ret;
+ 	unsigned long menu_duration = 1;
+ 	unsigned long menu_max = 10;
++	char* sys_led = NULL;
+ 
+ 	config_offset = fdt_path_offset(gd->fdt_blob, "/config");
+ 	config_node = offset_to_ofnode(config_offset);
+@@ -115,7 +115,7 @@ static int init_boot_mode(void)
+ 		/* We need to disable the LED once at the beginning, since it might be on */
+                 /* already so add a delay as well, to be able to see first light signal.  */
+ 		if (cnt == 0) {
+-			init_system_status_led(LEDST_OFF);
++			sys_led = init_system_status_led(LEDST_OFF);
+ 			mdelay(1000);
+ 		}
+ 		/* increase and store menu counter */
+@@ -135,9 +135,16 @@ static int init_boot_mode(void)
+ 		/* The last menu entry is always console. Some devices do not provide serial     */
+ 		/* console so we need to start netCONSOLE - this need to be done in a precommand */
+                 /* to be able to stop autoboot, because of the pw-protection.                    */
++		/* NOTE: Do NOT run led_default_state(), system_status led 'on' signals console mode */
+ 		init_system_status_led(LEDST_ON);
+ 		if ( env_get("menu_last_cmd") != NULL ) {
+ 			env_set("preboot", "run menu_last_cmd");
++			if (sys_led != NULL) {
++				/* The command 'set_default_led' will be executed when starting the bootmenu (->executed after autoboot delay). */
++				/* We want to disable the console-led before starting linux, to have a clean state.                             */
++				sprintf(buf, "led %s off;sleep 1;led %s default", sys_led, sys_led);
++				env_set("set_default_led", buf);
++			}
+ 		}
+ 	} else {
+ 		led_default_state();
+diff --git a/cmd/led.c b/cmd/led.c
+index 50ffa509ab..fa6c592da6 100644
+--- a/cmd/led.c
++++ b/cmd/led.c
+@@ -10,12 +10,13 @@
+ #include <led.h>
+ #include <dm/uclass-internal.h>
+ 
+-#define LED_TOGGLE LEDST_COUNT
++#define LED_DEFAULT LEDST_COUNT
+ 
+ static const char *const state_label[] = {
+ 	[LEDST_OFF]	= "off",
+ 	[LEDST_ON]	= "on",
+ 	[LEDST_TOGGLE]	= "toggle",
++	[LEDST_DEFAULT]	= "default",
+ #ifdef CONFIG_LED_BLINK
+ 	[LEDST_BLINK]	= "blink",
+ #endif
+@@ -105,6 +106,7 @@ int do_led(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ 	case LEDST_OFF:
+ 	case LEDST_ON:
+ 	case LEDST_TOGGLE:
++	case LEDST_DEFAULT:
+ 		ret = led_set_state(dev, cmd);
+ 		break;
+ #ifdef CONFIG_LED_BLINK
+@@ -136,7 +138,7 @@ int do_led(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ U_BOOT_CMD(
+ 	led, 4, 1, do_led,
+ 	"manage LEDs",
+-	"<led_label> on|off|toggle" BLINK "\tChange LED state\n"
++	"<led_label> on|off|toggle|default" BLINK "\tChange LED state\n"
+ 	"led <led_label>\tGet LED state\n"
+ 	"led list\t\tshow a list of LEDs"
+ );
+diff --git a/drivers/led/led-uclass.c b/drivers/led/led-uclass.c
+index 2859475a6b..9cd607ea2f 100644
+--- a/drivers/led/led-uclass.c
++++ b/drivers/led/led-uclass.c
+@@ -32,6 +32,27 @@ int led_get_by_label(const char *label, struct udevice **devp)
+ 	return -ENODEV;
+ }
+ 
++int led_set_state(struct udevice *dev, enum led_state_t state);
++
++int led_set_default_state(struct udevice *dev)
++{
++	int ret;
++	const char *default_state = dev_read_string(dev, "default-state");
++
++	if (!default_state)
++		return 0;
++	ret = device_probe(dev);
++	if (ret)
++		return ret;
++	if (!strncmp(default_state, "on", 2))
++		led_set_state(dev, LEDST_ON);
++	else if (!strncmp(default_state, "off", 3))
++		led_set_state(dev, LEDST_OFF);
++	/* default-state = "keep" : device is only probed */
++
++	return 0;
++}
++
+ int led_set_state(struct udevice *dev, enum led_state_t state)
+ {
+ 	struct led_ops *ops = led_get_ops(dev);
+@@ -39,6 +60,9 @@ int led_set_state(struct udevice *dev, enum led_state_t state)
+ 	if (!ops->set_state)
+ 		return -ENOSYS;
+ 
++	if (LEDST_DEFAULT == state)
++		return led_set_default_state(dev);
++
+ 	return ops->set_state(dev, state);
+ }
+ 
+@@ -64,6 +88,7 @@ int led_set_period(struct udevice *dev, int period_ms)
+ }
+ #endif
+ 
++
+ int led_default_state(void)
+ {
+ 	struct udevice *dev;
+@@ -77,17 +102,9 @@ int led_default_state(void)
+ 	for (uclass_find_first_device(UCLASS_LED, &dev);
+ 	     dev;
+ 	     uclass_find_next_device(&dev)) {
+-		default_state = dev_read_string(dev, "default-state");
+-		if (!default_state)
+-			continue;
+-		ret = device_probe(dev);
++		ret = led_set_default_state( dev);
+ 		if (ret)
+ 			return ret;
+-		if (!strncmp(default_state, "on", 2))
+-			led_set_state(dev, LEDST_ON);
+-		else if (!strncmp(default_state, "off", 3))
+-			led_set_state(dev, LEDST_OFF);
+-		/* default-state = "keep" : device is only probed */
+ 	}
+ 
+ 	return ret;
+diff --git a/include/configs/hilscher-ucm-imx8m-mini.h b/include/configs/hilscher-ucm-imx8m-mini.h
+index 2c6d888807..489e7fd7df 100644
+--- a/include/configs/hilscher-ucm-imx8m-mini.h
++++ b/include/configs/hilscher-ucm-imx8m-mini.h
+@@ -20,9 +20,11 @@
+ 	"netcon_down="SERIALCON_ENABLE"\0" \
+ 	"menu_last_cmd=setenv bootdelay 15; run netcon_up;\0" \
+ 	"menum=2\0" \
++	"set_default_led= \0" \
+ 
+ #define CONFIG_BOOTCOMMAND BOOTCOMMAND_SCRIPT
+ #define BOOTCOMMAND_SCRIPT \
++	"run set_default_led; " \
+ 	"if test \"${boot_mode}\" = \"1\"; then " \
+ 		"run fastboot; " \
+ 	"fi; " \
+diff --git a/include/led.h b/include/led.h
+index 7bfdddfd6f..66888571b4 100644
+--- a/include/led.h
++++ b/include/led.h
+@@ -29,6 +29,7 @@ enum led_state_t {
+ 	LEDST_OFF = 0,
+ 	LEDST_ON = 1,
+ 	LEDST_TOGGLE,
++	LEDST_DEFAULT,
+ #ifdef CONFIG_LED_BLINK
+ 	LEDST_BLINK,
+ #endif
+-- 
+2.17.1
+

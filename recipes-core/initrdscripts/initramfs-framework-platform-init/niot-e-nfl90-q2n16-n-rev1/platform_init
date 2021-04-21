@@ -1,0 +1,52 @@
+#!/bin/sh
+
+platform_init_enabled() {
+	return 0
+}
+
+create_gpio() {
+	chip=$1; offset=$2; dir=$3; name=$4
+	gpio=$((chip * 32 + offset))
+
+	echo $gpio > /sys/class/gpio/export
+	echo $dir > /sys/class/gpio/gpio${gpio}/direction
+
+	ln -s /sys/class/gpio/gpio${gpio}/value  /var/platform/$name
+}
+
+platform_init_run() {
+	mkdir -p /var/platform
+	mount -t tmpfs tmpfs /var/platform
+
+	echo "Exporting the platform gpios ..."
+	create_gpio 0 11 "in"  "pgood_3v3"
+	create_gpio 0 6  "in"  "pgood_5v0"
+	create_gpio 0 8  "in"  "tpm_irq#"
+	create_gpio 0 3  "in"  "tpm_gpio"
+	create_gpio 0 1  "in"  "sim_sw2"
+	create_gpio 2 7  "out" "sel_rs_wf#"
+	create_gpio 2 9  "in"  "spi3_int#"
+	create_gpio 3 20 "out" "lte_flightmode#"
+	create_gpio 0 5  "in"  "in_in0"
+	create_gpio 4 19 "in"  "in_in1"
+	create_gpio 4 21 "out" "out_out0"
+
+	echo "Exporting the platform leds ..."
+	ln -s /sys/class/leds/act_green/brightness  /var/platform/led_act_green
+	ln -s /sys/class/leds/act_red/brightness  /var/platform/led_act_red
+	ln -s /sys/class/leds/apl_green/brightness  /var/platform/led_apl_green
+	ln -s /sys/class/leds/apl_red/brightness  /var/platform/led_apl_red
+	ln -s /sys/class/leds/bt_blue/brightness  /var/platform/led_bt_blue
+	ln -s /sys/class/leds/bt_red/brightness  /var/platform/led_bt_red
+	ln -s /sys/class/leds/led1_green/brightness  /var/platform/led_led1_green
+	ln -s /sys/class/leds/led1_red/brightness  /var/platform/led_led1_red
+	ln -s /sys/class/leds/sta_green/brightness  /var/platform/led_sta_green
+	ln -s /sys/class/leds/sys_rdy_yellow/brightness  /var/platform/led_sys_rdy_yellow
+	ln -s /sys/class/leds/sys_run_green/brightness  /var/platform/led_sys_run_green
+
+	#led will be used to signal that device is in rescue boot mode
+	ln -s /sys/class/leds/apl_red/brightness  /var/platform/rescue_mode_led
+
+	# Exclude non-usable devices (e.g. eMMC when using SD and vice versa
+	lvm_exclude
+}

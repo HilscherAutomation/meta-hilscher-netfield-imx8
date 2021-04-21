@@ -1,0 +1,10 @@
+#define PU     0x140
+#define PD     0x100
+#define OD     0x020
+#define IS     0x080
+#define SSR    0x000
+#define FSR    0x010
+#define DSEx1  0x000
+#define DSEx2  0x004
+#define DSEx4  0x002
+#define DSEx6  0x006

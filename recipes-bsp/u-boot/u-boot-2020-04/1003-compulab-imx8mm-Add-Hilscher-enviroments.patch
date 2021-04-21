@@ -1,0 +1,106 @@
+From 640b59e23caff1cf1b1854852612d50c381f4009 Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Tue, 3 Nov 2020 14:45:00 +0100
+Subject: [PATCH 3/6] compulab-imx8mm: Add-Hilscher-enviroments
+
+---
+ include/configs/cpl-imx8m-mini.h          |  3 +-
+ include/configs/hilscher-ucm-imx8m-mini.h | 59 +++++++++++++++++++++++
+ include/configs/ucm-imx8m-mini.h          |  1 +
+ 3 files changed, 62 insertions(+), 1 deletion(-)
+ create mode 100644 include/configs/hilscher-ucm-imx8m-mini.h
+
+diff --git a/include/configs/cpl-imx8m-mini.h b/include/configs/cpl-imx8m-mini.h
+index dd8120f4dc..7dcb7a30fb 100644
+--- a/include/configs/cpl-imx8m-mini.h
++++ b/include/configs/cpl-imx8m-mini.h
+@@ -148,7 +148,8 @@
+ 			"fi; " \
+ 		"else " \
+ 			"booti; " \
+-		"fi;\0"
++		"fi;\0" \
++	HILSCHER_CONFIG_EXTRA_ENV_SETTINGS
+ #define CONFIG_BOOTCOMMAND \
+ 	"for src in sd_ul usb_ul emmc_ul; do " \
+ 		"run ${src}; " \
+diff --git a/include/configs/hilscher-ucm-imx8m-mini.h b/include/configs/hilscher-ucm-imx8m-mini.h
+new file mode 100644
+index 0000000000..8d0173de67
+--- /dev/null
++++ b/include/configs/hilscher-ucm-imx8m-mini.h
+@@ -0,0 +1,59 @@
++#define CONFIG_LOADADDR 0x50000000 //0x40480000
++#define CONFIG_SYS_LOAD_ADDR CONFIG_LOADADDR
++
++#define CONFIG_SYS_BOOTM_LEN 0x2000000
++
++/* Initial environment variables */
++#define HILSCHER_CONFIG_EXTRA_ENV_SETTINGS \
++	"loadbootscript="LOAD_BOOT_SCRIPT"\0" \
++	"bootscript="RUN_BOOT_SCRIPT"\0" \
++	"loadimage="LOAD_IMAGE"\0" \
++	"netboot="NETBOOT_SCRIPT"\0" \
++	"initrd_high=0x50000000\0" \
++	"fdt_high=0x48000000\0" \
++
++#define CONFIG_BOOTCOMMAND BOOTCOMMAND_SCRIPT
++#define BOOTCOMMAND_SCRIPT \
++	"mmc dev ${mmcdev}; " \
++	"if mmc rescan; then " \
++		"if run loadbootscript; then " \
++			"run bootscript; " \
++		"else " \
++			"if run loadimage; then " \
++				"run mmcboot; " \
++			"else " \
++				"run netboot; " \
++			"fi; " \
++		"fi; " \
++	"else " \
++		"booti ${loadaddr} - ${fdt_addr}; " \
++	"fi; " \
++
++#define LOAD_BOOT_SCRIPT \
++	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};" \
++
++#define RUN_BOOT_SCRIPT \
++	"echo Running bootscript from mmc ...; source;" \
++
++#define LOAD_IMAGE \
++	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image};" \
++	
++#define NETBOOT_SCRIPT \
++	"netboot=echo Booting from net ...; " \
++	"run netargs;  " \
++	"if test ${ip_dyn} = yes; then " \
++		"setenv get_cmd dhcp; " \
++	"else " \
++		"setenv get_cmd tftp; " \
++	"fi; " \
++	"${get_cmd} ${loadaddr} ${image}; " \
++	"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
++		"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
++			"booti ${loadaddr} - ${fdt_addr}; " \
++		"else " \
++			"echo WARN: Cannot load the DT; " \
++		"fi; " \
++	"else " \
++		"booti; " \
++	"fi; " \
++
+diff --git a/include/configs/ucm-imx8m-mini.h b/include/configs/ucm-imx8m-mini.h
+index b3d6082a66..1243a4bd27 100644
+--- a/include/configs/ucm-imx8m-mini.h
++++ b/include/configs/ucm-imx8m-mini.h
+@@ -8,6 +8,7 @@
+ #define __UCM_IMX8M_MINI_H
+ 
+ #include "cpl-imx8m-mini.h"
++#include "hilscher-ucm-imx8m-mini.h"
+ 
+ #if defined(CONFIG_ANDROID_SUPPORT)
+ #include "ucm-imx8m-mini_android.h"
+-- 
+2.17.1
+

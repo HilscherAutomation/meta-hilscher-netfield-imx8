@@ -1,0 +1,13 @@
+[Unit]
+Description=Run hciattach when HCI UART device becomes available
+Wants=bluetooth.service
+Before=bluetooth.service
+After=sys-devices-platform-30a60000.serial-tty-ttymxc3.device
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/hciattach -s 115200 /dev/ttymxc3 bcm43xx 1500000 flow
+ExecStartPost=/usr/bin/hciconfig hci0 up
+
+[Install]
+WantedBy=multi-user.target

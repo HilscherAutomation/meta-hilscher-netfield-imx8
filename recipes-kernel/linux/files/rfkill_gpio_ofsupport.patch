@@ -1,0 +1,45 @@
+Add devicetree support for rfkill-gpio driver.
+
+Taken and modified from https://patchwork.kernel.org/patch/3989371/
+
+--- a/net/rfkill/rfkill-gpio.c	2019-10-30 10:48:45.387613907 +0100
++++ b/net/rfkill/rfkill-gpio.c	2019-10-30 11:40:37.830119344 +0100
+@@ -96,8 +96,16 @@
+ 	if (!rfkill)
+ 		return -ENOMEM;
+ 
+-	device_property_read_string(&pdev->dev, "name", &rfkill->name);
+-	device_property_read_string(&pdev->dev, "type", &type_name);
++
++	if (&pdev->dev.of_node) {
++		struct device_node *np = pdev->dev.of_node;
++
++		of_property_read_string(np, "name", &rfkill->name);
++		of_property_read_string(np, "type", &type_name);
++	} else {
++		device_property_read_string(&pdev->dev, "name", &rfkill->name);
++		device_property_read_string(&pdev->dev, "type", &type_name);
++	}
+ 
+ 	if (!rfkill->name)
+ 		rfkill->name = dev_name(&pdev->dev);
+@@ -173,6 +181,11 @@
+ MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
+ #endif
+ 
++static const struct of_device_id rfkill_of_match[] = {
++	{ .compatible = "rfkill-gpio", },
++	{}
++};
++
+ static struct platform_driver rfkill_gpio_driver = {
+ 	.probe = rfkill_gpio_probe,
+ 	.remove = rfkill_gpio_remove,
+@@ -192,6 +192,7 @@
+ 	.driver = {
+ 		.name = "rfkill_gpio",
+ 		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
++		.of_match_table = of_match_ptr(rfkill_of_match),
+ 	},
+ };
+ 

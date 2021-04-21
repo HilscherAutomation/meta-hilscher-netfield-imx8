@@ -1,0 +1,109 @@
+From 995e14df25753863f436752bc0400ef7296db46b Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Fri, 6 Nov 2020 13:25:14 +0100
+Subject: [PATCH 5/6] compulab-imx8mm: Add LED support as defined in the
+ following three steps.
+
+devicetree snippets ...
+config {
+  u-boot,system-status-led = "sys_rdy_yellow";
+  u-boot,led-test-duration = <1000>;
+};
+
+step 1) If 'u-boot,led-test-duration = <1000>' is defiend, the system LEDs are turned on/off.
+        The node value defines the 'on' duration in milliseconds.
+step 2) All devicetree defined LEDs are switched to there default-state.
+step 3) If 'u-boot,system-status-led' is defined, the related LEDs will be turned on.
+---
+ .../compulab/plat/imx8mm/board/board_addon.c  | 65 +++++++++++++++++++
+ 1 file changed, 65 insertions(+)
+
+diff --git a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
+index bb0498bb63..088ae05479 100644
+--- a/board/compulab/plat/imx8mm/board/board_addon.c
++++ b/board/compulab/plat/imx8mm/board/board_addon.c
+@@ -5,9 +5,68 @@
+  */
+ 
+ #include <common.h>
++#include <led.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
++static int led_test_on_off(int duration_ms)
++{
++	struct udevice *dev;
++	struct uclass *uc;
++	int ret;
++
++	ret = uclass_get(UCLASS_LED, &uc);
++	if (ret)
++		return ret;
++
++	for (uclass_find_first_device(UCLASS_LED, &dev); dev; uclass_find_next_device(&dev)) {
++		ret = device_probe(dev);
++		if (ret)
++			return ret;
++	}
++
++	for (uclass_find_first_device(UCLASS_LED, &dev); dev; uclass_find_next_device(&dev))
++		led_set_state(dev, LEDST_ON);
++
++	mdelay(duration_ms);
++
++	for (uclass_find_first_device(UCLASS_LED, &dev); dev; uclass_find_next_device(&dev))
++		led_set_state(dev, LEDST_OFF);
++
++	return ret;
++}
++
++static int test_system_leds(void)
++{
++	int duration_ms;
++
++	duration_ms = fdtdec_get_config_int(gd->fdt_blob, "u-boot,led-test-duration", 0);
++	if (duration_ms)
++		led_test_on_off(duration_ms);
++
++	return 0;
++}
++
++static int init_system_status_led(void)
++{
++	struct udevice *dev;
++	char *led_name;
++	int ret;
++
++	led_name = fdtdec_get_config_string(gd->fdt_blob, "u-boot,system-status-led");
++	if (led_name) {
++		ret = led_get_by_label(led_name, &dev);
++		if (ret)
++			return ret;
++
++		ret = led_set_state(dev, LEDST_ON);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
++}
++
+ static int setup_mac_address_x(int x)
+ {
+ 	int ret;
+@@ -35,6 +94,12 @@ int misc_init_r(void)
+ {
+ 	int x, ret;
+ 
++	if (IS_ENABLED(CONFIG_LED)) {
++		test_system_leds();
++		led_default_state();
++		init_system_status_led();
++	}
++
+ 	for (x=0; x<4; x++) {
+ 		ret = setup_mac_address_x(x);
+ 		if (ret)
+-- 
+2.17.1
+

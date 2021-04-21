@@ -1,0 +1,37 @@
+#!/bin/sh
+
+platform_init_enabled() {
+	return 0
+}
+
+create_gpio() {
+	chip=$1; offset=$2; dir=$3; name=$4
+	gpio=$((chip * 32 + offset))
+
+	echo $gpio > /sys/class/gpio/export
+	echo $dir > /sys/class/gpio/gpio${gpio}/direction
+
+	ln -s /sys/class/gpio/gpio${gpio}/value  /var/platform/$name
+}
+
+platform_init_run() {
+	mkdir -p /var/platform
+	mount -t tmpfs tmpfs /var/platform
+
+	echo "Exporting the platform gpios ..."
+	create_gpio 0 6  "in"  "recovery#"
+	create_gpio 0 11 "in"  "pgood_3v3"
+	create_gpio 0 8  "in"  "tpm_irq#"
+	create_gpio 0 13 "in"  "tpm_gpio"
+
+	echo "Exporting the platform leds ..."
+	for led in edge_green edge_yellow wlan_blue; do
+		ln -s /sys/class/leds/${led}/brightness /var/platform/led_${led}
+	done
+	for led in cloud_red cloud_green; do
+		ln -s /sys/class/leds/${led} /var/platform/led_${led}
+	done
+
+	# Exclude non-usable devices (e.g. eMMC when using SD and vice versa
+	lvm_exclude
+}

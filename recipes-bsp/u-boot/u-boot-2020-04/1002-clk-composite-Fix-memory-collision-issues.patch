@@ -1,0 +1,27 @@
+From d0179eef3730cd29fc5a7284070c280bc80901ce Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Tue, 8 Sep 2020 11:56:17 +0200
+Subject: [PATCH 2/6] - clk-composite: Fix memory collision issues.
+
+Move clk_composite_ops into data section to avoid memory collisions
+with non-recolated fdt data in an early state of booting.
+---
+ drivers/clk/clk-composite.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/clk/clk-composite.c b/drivers/clk/clk-composite.c
+index 414185031e..63edba6a55 100644
+--- a/drivers/clk/clk-composite.c
++++ b/drivers/clk/clk-composite.c
+@@ -79,7 +79,7 @@ static int clk_composite_disable(struct clk *clk)
+ 	return 0;
+ }
+ 
+-struct clk_ops clk_composite_ops = {
++struct clk_ops clk_composite_ops __section(".data.clk_composite_ops") = {
+ 	/* This will be set according to clk_register_composite */
+ };
+ 
+-- 
+2.17.1
+

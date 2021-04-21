@@ -1,0 +1,12 @@
+[Unit]
+Description=Set mode of system LED.
+After=multi-user.target
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/usr/bin/system-status-led up
+ExecStop=/usr/bin/system-status-led shutdown
+
+[Install]
+WantedBy=system-up.target

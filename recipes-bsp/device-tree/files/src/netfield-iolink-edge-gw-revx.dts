@@ -1,0 +1,436 @@
+/dts-v1/;
+
+#include "../freescale/imx8mm.dtsi"
+#include "../freescale/imx8mm-pinfunc.h"
+#include "../compulab/ucm-imx8m-mini.dtsi"
+
+#include "pad_config.h"
+
+/*
+ * The pin function ID is a tuple of
+ * <mux_reg conf_reg input_reg mux_mode input_val>
+ */
+#define MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX           0x1DC 0x444 0x000 0x4 0x0
+#define MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX          0x1D8 0x440 0x4fc 0x4 0x2
+#define MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B        0x1D4 0x43C 0x4f8 0x4 0x3
+#define MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B        0x1D0 0x438 0x000 0x4 0x0
+
+/ {
+	model = "netfield-iolink-edge-gw-revx";
+
+	aliases {
+		ethernet0 = &fec1;
+		i2c0 = &i2c1;
+		i2c1 = &i2c2;
+		i2c2 = &i2c3;
+		i2c3 = &i2c4;
+		serial0 = &uart1;
+		serial1 = &uart2;
+		serial2 = &uart3;
+		serial3 = &uart4;
+		spi0 = &ecspi1;
+		spi1 = &ecspi2;
+		spi2 = &ecspi3;
+		//mmc0 = &usdhc2; /* SD-Card */
+		mmc1 = &usdhc3; /* eMMC */
+		gpio0 = &gpio1;
+		gpio1 = &gpio2;
+		gpio2 = &gpio3;
+		gpio3 = &gpio4;
+		gpio4 = &gpio5;
+		rtc0 = &rtc0;
+		rtc1 = &snvs_rtc;
+	};
+
+	config {
+// 		u-boot,system-status-led = "sys_rdy_yellow";
+		u-boot,led-test-duration = <1000>;
+	};
+
+	device_leds:device_leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio_device_led>;
+
+		cloud_red {
+			label = "cloud_red";
+			gpios = <&gpio3 20 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+			default-state = "off";
+		};
+		cloud_green {
+			label = "cloud_green";
+			gpios = <&gpio3 24 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+			default-state = "off";
+		};
+		edge_green {
+			label = "edge_green";
+			gpios = <&gpio4 10 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+			default-state = "off";
+		};
+		edge_yellow {
+			label = "edge_yellow";
+			gpios = <&gpio3 8 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+			default-state = "off";
+		};
+		apl_green {
+			label = "apl_green";
+			gpios = <&gpio2 20 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+			default-state = "off";
+		};
+		apl_red {
+			label = "apl_red";
+			gpios = <&gpio2 19 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+			default-state = "off";
+		};
+	};
+
+	wlreg_on: wlregon-regulator {
+		status = "okay";
+		gpio = <&gpio2 10 GPIO_ACTIVE_HIGH>; // SOM internal
+	};
+
+	reg_usdhc2_vmmc: regulator-usdhc2 {
+		status = "disabled";
+		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>; // SD2_nRST
+	};
+
+	regulator-usdhc3rst {
+		status = "okay";
+		gpio = <&gpio3 16 GPIO_ACTIVE_HIGH>; // SOM internal
+	};
+
+	regulator-fec1rst {
+		status = "disabled";
+		gpio = <&gpio1 10 GPIO_ACTIVE_HIGH>; // USB1_ID
+	};
+
+	usdhc1_pwrseq: usdhc1_pwrseq {
+		// NOTE: The compulab devicetree are faulty related to the node names. Fix these for usage!
+		status = "okay";
+		reset-gpios = <&gpio2 10 GPIO_ACTIVE_LOW>; // SOM internal
+	};
+
+	backlight {
+		status = "disabled";
+	};
+
+};
+
+&iomuxc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_hog_1>;
+
+	ucm-imx8m-mini {
+		pinctrl_gpio_device_led: gpiodeviceledgrp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20     (PU|OD|DSEx6)
+				MX8MM_IOMUXC_SAI5_RXD3_GPIO3_IO24    (PU|OD|DSEx6)
+				MX8MM_IOMUXC_SAI1_TXFS_GPIO4_IO10    (PU|OD|DSEx6)
+				MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8   (PU|OD|DSEx6)
+				MX8MM_IOMUXC_SD2_WP_GPIO2_IO20       (PU|OD|DSEx6)
+				MX8MM_IOMUXC_SD2_RESET_B_GPIO2_IO19  (PU|OD|DSEx6)
+			>;
+		};
+
+		pinctrl_gpio1: gpio1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11 (PD|IS) // PGOOD_3V3
+				MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8  (PD|IS) // TPM_IRQ#
+				MX8MM_IOMUXC_GPIO1_IO13_GPIO1_IO13 (PU|IS) // TPM_GPIO
+			>;
+		};
+
+//		pinctrl_gpio2: gpio2grp {
+//			fsl,pins = <
+//				// empty
+//			>;
+//		};
+
+//		pinctrl_gpio3: gpio3grp {
+//			fsl,pins = <
+//				// empty
+//			>;
+//		};
+
+//		pinctrl_gpio4: gpio4grp {
+//			fsl,pins = <
+//				// empty
+//			>;
+//		};
+
+//		pinctrl_gpio5: gpio5grp {
+//			fsl,pins = <
+//				// empty
+//			>;
+//		};
+
+		pinctrl_uart2: uart2grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX      (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX     (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B   (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B   (PU|FSR|DSEx1)
+			>;
+		};
+
+		pinctrl_uart3: uart3grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART3_RXD_UART3_DCE_RX     (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_UART3_TXD_UART3_DCE_TX     (PU|FSR|DSEx1)
+			>;
+		};
+
+		pinctrl_ecspi1: ecspi1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_ECSPI1_SCLK_ECSPI1_SCLK  (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_ECSPI1_MOSI_ECSPI1_MOSI  (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_ECSPI1_MISO_ECSPI1_MISO  (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_ECSPI1_SS0_GPIO5_IO9     (PU|FSR|DSEx1)
+			>;
+		};
+
+		pinctrl_ecspi3: ecspi3grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART1_RXD_ECSPI3_SCLK    (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_UART1_TXD_ECSPI3_MOSI    (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_UART2_RXD_ECSPI3_MISO    (PU|FSR|DSEx1)
+				MX8MM_IOMUXC_UART2_TXD_GPIO5_IO25     (PU|FSR|DSEx1)
+			>;
+		};
+	};
+};
+
+&gpio1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_gpio1>;
+	gpio-line-names =
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "TPM_IRQ#", "N/C",
+		"N/C", "PGOOD_3V3", "N/C", "TPM_GPIO", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C";
+};
+
+&gpio2 {
+	status = "okay";
+	pinctrl-names = "default";
+//	pinctrl-0 = <&pinctrl_gpio2>;
+	gpio-line-names =
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "led-apl-red",
+		"led-apl-green", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C";
+};
+
+&gpio3 {
+	status = "okay";
+	pinctrl-names = "default";
+//	pinctrl-0 = <&pinctrl_gpio3>;
+	gpio-line-names =
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "led-edge-yellow", "N/C",
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"led-cloud-red", "N/C", "N/C", "N/C", "led-cloud-green", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C";
+};
+
+&gpio4 {
+	status = "okay";
+	pinctrl-names = "default";
+//	pinctrl-0 = <&pinctrl_gpio4>;
+	gpio-line-names =
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"led-edge-green", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C";
+};
+
+&gpio5 {
+	status = "okay";
+	pinctrl-names = "default";
+//	pinctrl-0 = <&pinctrl_gpio5>;
+	gpio-line-names =
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
+		"N/C", "N/C";
+};
+
+&uart1 {
+	status = "disabled";
+};
+
+&uart2 { /* Prepared for Bluetooth */
+	status = "disabled";
+};
+
+&uart3 { /* console for development only! */
+	status = "okay";
+};
+
+&uart4 {
+	status = "disabled";
+};
+
+&ecspi1 { /* TPM */
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi1>;
+	num-cs = <1>;
+
+	cs-gpios = <
+		&gpio5 9 GPIO_ACTIVE_LOW
+	>;
+
+	spi1_0: tpm@0 {
+		compatible = "tcg,tpm_tis-spi", "infineon,slb9670";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+	};
+};
+
+&ecspi2 {
+	status = "disabled";
+};
+
+&ecspi3 { /* netX90 */
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi3>;
+	num-cs = <1>;
+
+	cs-gpios = <
+		&gpio5 25 GPIO_ACTIVE_LOW
+	>;
+
+	spi3_0: netx90_spm@0 {
+		compatible = "spidev";
+		reg = <0>;
+		spi-max-frequency = <125000000>;
+	};
+};
+
+&i2c1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c1>;
+
+	clock-frequency = <1000000>;
+
+	fram@51 {
+		compatible = "24c64";
+		reg = <0x51>;
+		pagesize = <1024>;
+	};
+};
+
+&i2c2 { /* SOM: PMIC, RTC, EEprom*/
+	status = "okay";
+};
+
+&i2c3 {
+	status = "disabled";
+};
+
+&i2c4 {
+	status = "disabled";
+};
+
+&usdhc1 { /* SOM: WLAN/Bluetooth */
+	status = "okay";
+};
+
+&usdhc2 {
+	status = "disabled";
+};
+
+&usdhc3 { /* SOM: MMC */
+	status = "okay";
+};
+
+&usbotg1 {
+	status = "disabled";
+};
+
+&usbotg2 {
+	status = "disabled";
+};
+
+&fec1 {
+	status = "okay";
+};
+
+&ethphy0 {
+	/delete-property/ at803x,eee-okay;
+	at803x,eee-disabled;
+};
+
+&snvs {
+	status = "okay";
+};
+
+&snvs_pwrkey {
+	status = "okay";
+};
+
+&wdog1 {
+	status = "okay";
+};
+
+&pcie0 {
+	status = "disabled";
+};
+
+&sai1 {
+	status = "disabled";
+};
+
+&sai2 {
+	status = "disabled";
+};
+
+&sai3 {
+	status = "disabled";
+};
+
+/* NOTE: sai4 is not defined by imx8mm.dtsi */
+// &sai4 {
+// 	status = "disabled";
+// };
+
+&sai5 {
+	status = "disabled";
+};
+
+&sai6 {
+	status = "disabled";
+};
+
+&lcdif {
+	status = "disabled";
+};
+
+&pwm2 {
+	status = "disabled";
+};
+
+&gpu {
+	status = "disabled";
+};
+
+&vpu_g1 {
+	status = "disabled";
+};
+
+&vpu_g2 {
+	status = "disabled";
+};
+
+&vpu_h1 {
+	status = "disabled";
+};

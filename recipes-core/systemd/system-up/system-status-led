@@ -1,0 +1,26 @@
+#!/bin/sh
+
+[ ! -e /sys/class/leds/sys_rdy_yellow ] && exit 0
+[ ! -e /sys/class/leds/sys_run_green ] && exit 0
+
+if [ "$1" = "up" ]; then
+        echo 0 > /sys/class/leds/sys_rdy_yellow/brightness
+        echo none > /sys/class/leds/sys_rdy_yellow/trigger
+        echo 0 > /sys/class/leds/sys_run_green/brightness
+        echo heartbeat > /sys/class/leds/sys_run_green/trigger
+elif [ "$1" = "shutdown" ]; then
+        echo 0 > /sys/class/leds/sys_rdy_yellow/trigger
+        echo heartbeat > /sys/class/leds/sys_rdy_yellow/trigger
+        echo 0 > /sys/class/leds/sys_run_green/brightness
+        echo none > /sys/class/leds/sys_run_green/trigger
+elif [ "$1" = "error" ]; then
+        echo 1 > /sys/class/leds/sys_rdy_yellow/brightness
+        echo none > /sys/class/leds/sys_rdy_yellow/trigger
+        echo 0 > /sys/class/leds/sys_run_green/brightness
+        echo none > /sys/class/leds/sys_run_green/trigger
+else
+        echo "Error: Invalid or missing argument!"
+        exit 1
+fi
+
+exit 0
