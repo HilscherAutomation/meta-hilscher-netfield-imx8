@@ -2,8 +2,6 @@ MACHINEOVERRIDES .= ":oem"
 
 TMPDIR = "${TOPDIR}/tmp-oem/machines/${MACHINE}"
 
-PART_SCHEME = "boot-rescue-system-lvm"
-
 VENDOR_NAME = "TBD-by-OEM"
 VENDOR_OUI = "TBD-by-OEM"
 VENDOR_URL = "TBD-by-OEM"
