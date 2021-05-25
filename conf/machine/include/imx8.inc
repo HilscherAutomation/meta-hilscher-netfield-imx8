@@ -104,7 +104,7 @@ WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage"
 # SWU images
 #############################################################################
 SWU_FILES += "swupdate/helper.lua;helper.lua ${IMX_BOOT_FILE};boot.bin"
-SWU_FILE_ATTRIBUTES ??= "boot.bin;path=\"/dev/mmcblk0\";offset=\"${IMX_BOOT_SEEK}K\";name=\"boot.bin\";version;install-if-different=true"
+SWU_FILE_ATTRIBUTES += "boot.bin;path=\"/dev/mmcblk0\";offset=\"${IMX_BOOT_SEEK}K\";name=\"boot.bin\";version;install-if-different=true"
 
 SWU_RSYNC_PART_UPDATE ??= "boot system"
 SWU_BOOT_PART_CONTENT ??= "${IMAGE_BOOT_FILES}"
