@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/linux-5.4:${THISDIR}/files:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/linux-5.4:${THISDIR}/files:${THISDIR}/compulab:"
 
 require recipes-kernel/linux/netfield-linux.inc
 
