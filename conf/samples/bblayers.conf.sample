@@ -13,6 +13,8 @@ BBLAYERS ?= " \
   ${TOPDIR}/../meta-hilscher-netfield-imx8 \
   ${TOPDIR}/../meta-bsp-imx8mm \
   ${TOPDIR}/../meta-freescale \
+  ${TOPDIR}/../meta-clang \
+  ${TOPDIR}/../meta-rust \
   ${TOPDIR}/../meta-gplv2 \
   ${TOPDIR}/../meta-security \
   ${TOPDIR}/../meta-security/meta-tpm \
