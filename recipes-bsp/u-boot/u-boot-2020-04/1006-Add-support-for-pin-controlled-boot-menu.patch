@@ -28,7 +28,7 @@ index 0caa4dc1b8..48520b0cfb 100644
 +	return devno - 1;
  }
  
- static int _mmc_get_env_part(struct mmc *mmc)
+ static int _mmc_get_env_part(void)
 diff --git a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
 index 088ae05479..b4b70a676a 100644
 --- a/board/compulab/plat/imx8mm/board/board_addon.c

@@ -16,31 +16,26 @@ diff --git a/board/compulab/common/eeprom.c b/board/compulab/common/eeprom.c
 index ebcafac04b..7a0781e8b9 100644
 --- a/board/compulab/common/eeprom.c
 +++ b/board/compulab/common/eeprom.c
-@@ -44,10 +44,18 @@
- #define PRODUCT_NAME_OFFSET		128
- #define PRODUCT_NAME_SIZE		16
- #define MAC_ADDR_OFFSET			4
--#define MAC_ADDR_OFFSET_LEGACY		0
--
--#define LAYOUT_INVALID	0
--#define LAYOUT_LEGACY	0xff
-+#define MAC_ADDR_OFFSET_LEGACY	0
-+#define MAC_ADDR2_OFFSET		10
-+#define MAC_ADDR3_OFFSET		32
-+#define MAC_ADDR4_OFFSET		38
+@@ -35,7 +35,17 @@
+ # define CONFIG_SYS_I2C_EEPROM_BUS_SB	0
+ #endif
+ 
++#define MAC_ADDR_OFFSET_LEGACY 0
++#define MAC_ADDR2_OFFSET               10
++#define MAC_ADDR3_OFFSET               32
++#define MAC_ADDR4_OFFSET               38
 +
-+#define LAYOUT_INVALID			0
-+#define	LAYOUT_VERSION_LEGACY	1
-+#define	LAYOUT_VERSION_VER1		2
-+#define	LAYOUT_VERSION_VER2		3
-+#define	LAYOUT_VERSION_VER3		4
-+#define	LAYOUT_VERSION_VER4		5
-+#define LAYOUT_LEGACY			0xff
+ #define LAYOUT_INVALID	0
++#define LAYOUT_VERSION_LEGACY 1
++#define LAYOUT_VERSION_VER1   2
++#define LAYOUT_VERSION_VER2   3
++#define LAYOUT_VERSION_VER3   4
++#define LAYOUT_VERSION_VER4   5
+ #define LAYOUT_LEGACY	0xff
  
  static int cl_eeprom_layout; /* Implicitly LAYOUT_INVALID */
- 
 @@ -157,6 +165,52 @@ void cpl_get_board_serial(struct tag_serialnr *serialnr)
- 	}
+ 	return cl_eeprom_read(offset, buf, 6);
  }
  
 +/*
@@ -89,9 +84,9 @@ index ebcafac04b..7a0781e8b9 100644
 +	return cl_eeprom_read(offset, buf, 6);
 +}
 +
+ static u32 board_rev;
+ 
  /*
-  * Routine: cl_eeprom_read_mac_addr
-  * Description: read mac address and store it in buf.
 @@ -473,12 +527,6 @@ int eeprom_field_update_date(struct eeprom_field *field, uchar *fbuf,
  	return 0;
  }
@@ -109,14 +104,14 @@ diff --git a/board/compulab/common/eeprom.h b/board/compulab/common/eeprom.h
 index d366f59288..4c926cc047 100644
 --- a/board/compulab/common/eeprom.h
 +++ b/board/compulab/common/eeprom.h
-@@ -13,6 +13,7 @@
+@@ -27,6 +27,7 @@
  
  #if (defined(CONFIG_SYS_I2C) || defined(CONFIG_DM_I2C))
  int cl_eeprom_read_mac_addr(uchar *buf, uint eeprom_bus);
 +int cl_eeprom_read_mac_addr_x(uchar *buf, uint eeprom_bus, int x);
- u32 cl_eeprom_get_board_rev(uint eeprom_bus);
+ u32 cl_eeprom_get_som_revision(void);
+ u32 cl_eeprom_get_sb_revision(void);
  int cl_eeprom_get_product_name(uchar *buf, uint eeprom_bus);
- void cl_eeprom_get_suite(char* buf);
 diff --git a/board/compulab/plat/imx8mm/board/Makefile b/board/compulab/plat/imx8mm/board/Makefile
 index 8c50727052..a6de1c09bb 100644
 --- a/board/compulab/plat/imx8mm/board/Makefile
@@ -179,4 +174,3 @@ index 0000000000..bb0498bb63
 +}
 -- 
 2.17.1
-

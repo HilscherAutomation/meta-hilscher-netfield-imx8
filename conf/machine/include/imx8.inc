@@ -12,6 +12,13 @@ IMAGE_CLASSES_append += "hilscher_image_types"
 IMAGE_FSTYPES += "wic.bz2 swu fastboot licenses.tar.bz2"
 SOC_DEFAULT_IMAGE_FSTYPES = ""
 
+# meta-bsp-imx8mm adds git-lfs and bison to hosttools which is not needed / working in our docker env
+HOSTTOOLS_remove += "git-lfs bison"
+# meta-bsp-imx8mm adds firmware-imx-sdma if distro != dunfell which is unavailable in netFIELD which is based on dunfell
+CORE_IMAGE_EXTRA_INSTALL_remove += "firmware-imx-sdma"
+# meta-bsp-imx8mm adds kernel image to all images which makes core-image-minimal-initramfs too large
+IMAGE_INSTALL_remove += "kernel-image kernel-modules kernel-devicetree"
+
 #############################################################################
 # Preferred components/settings
 #############################################################################
@@ -144,6 +151,7 @@ HILSCHER_OVERLAYTARGETS ??= "${NETIOT_OVERLAY_DIRS}"
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/recipes-images/compulab-ucm-imx8m-mini.bb"
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/bt-start/bt-start_%.bbappend"
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/u-boot/u-boot-imx-fw-utils_2019.04.bbappend"
+BBMASK += "meta-bsp-imx8mm/recipes-bsp/u-boot-scr/u-boot-script.bbappend"
 
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/recipes-images/base-files_%.bbappend"
 BBMASK += "meta-bsp-imx8mm/recipes-kernel/linux/linux-imx_5.4.%.bbappend"

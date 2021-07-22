@@ -12,6 +12,4 @@ do_configure_append () {
 
 KERNEL_MODULE_AUTOLOAD += "goodix"
 
-COMPATIBLE_MACHINE = "(ucm-imx8m-mini|mcm-imx8m-mini|iot-gate-imx8)"
-
 DEPENDS += "firmware-imx"

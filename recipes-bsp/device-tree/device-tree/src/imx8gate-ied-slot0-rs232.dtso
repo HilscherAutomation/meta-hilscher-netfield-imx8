@@ -1,0 +1,19 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include "../freescale/imx8mm-pinfunc.h"
+
+/ {
+	compatible = "sb-iotgimx8-ied", "sb-iotgimx8", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&uart2>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_uart2>;
+			status = "okay";
+		};
+	};
+};

@@ -70,14 +70,37 @@ SRC_URI_append_niot-e-nfl90-q2n16-n-rev1 += " \
 
 COMPATIBLE_MACHINE_netfield-iolink-edge-gw-revx = ".*"
 DTS_BASE_netfield-iolink-edge-gw-revx += " \
-        file://src/netfield-iolink-edge-gw-revx.dts \
-        file://src/pad_config.h \
+	file://src/netfield-iolink-edge-gw-revx.dts \
+	file://src/pad_config.h \
 "
 
 SRC_URI_append_netfield-iolink-edge-gw-rev1 += " \
-        file://src/netfield-iolink-edge-gw-rev1.dts \
+	file://src/netfield-iolink-edge-gw-rev1.dts \
 "
 
 SRC_URI_append_netfield-iolink-edge-gw-rev2 += " \
-        file://src/netfield-iolink-edge-gw-rev2.dts \
+	file://src/netfield-iolink-edge-gw-rev2.dts \
 "
+
+# --------------------------------------
+# iotgate-rev1 demo board
+
+COMPATIBLE_MACHINE_netfield-compact-x8m-revx = ".*"
+DTS_BASE_netfield-compact-x8m-revx += " \
+	file://src/netfield-compact-x8m-revx.dts \
+"
+
+SRC_URI_append_netfield-compact-x8m-rev1 += " \
+	file://src/netfield-compact-x8m-rev1.dts \
+	file://src/imx8gate-can.dtso \
+	file://src/imx8gate-poed.dtso \
+	file://src/imx8gate-ied-slot0-rs232.dtso \
+	file://src/imx8gate-ied-slot1-rs232.dtso \
+	file://src/imx8gate-ied-slot0-tpm.dtso \
+	file://src/imx8gate-ied-slot1-tpm.dtso \
+	file://src/imx8gate-ied-slot0-can.dtso \
+	file://src/imx8gate-ied-slot1-can.dtso \
+	file://src/imx8gate-uart1-rs485.dtso \
+	file://src/imx8gate-uart1-rs232.dtso \
+"
+RDEPENDS_${PN}_netfield-compact-x8m-revx += "systemd-uart1-mode"

@@ -6,7 +6,9 @@ You can now run 'bitbake <target>'
 Common targets are:
     MACHINE="niot-e-nfl90-q2n16-n-rev1" bitbake mc:hilscher-niot-e-nfl90-q2n16-n-rev1:netfield-image-oem-all 
     MACHINE="netfield-iolink-edge-gw-rev2" bitbake mc:hilscher-netfield-iolink-edge-gw-rev2:netfield-image-oem-all
-    
+
+    MACHINE="netfield-compact-x8m-rev1" bitbake mc:hilscher-netfield-compact-x8m-rev1:netfield-image-oem-all
+
 Other commonly useful commands are:
  - 'devtool' and 'recipetool' handle common recipe tasks
  - 'bitbake-layers' handles common layer tasks

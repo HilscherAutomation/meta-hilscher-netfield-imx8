@@ -1,0 +1,7 @@
+/dts-v1/;
+
+#include "netfield-compact-x8m-revx.dts"
+
+/ {
+	model = "netfield-compact-x8m-rev1";
+};

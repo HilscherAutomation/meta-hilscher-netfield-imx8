@@ -14,6 +14,8 @@ SRC_URI_append += " \
 	file://1009-atheros.c-Fix-the-vddio-1p8v-and-smartEEE-quirk-of-A.patch \
 	file://1011-drivers-net-phy-Add-devicetree-support-for-the-max-s.patch \
 	file://1012-cmd-mii-Fix-wrong-mii-info-message-related-to-PHY-st.patch \
+	file://compulab-iotgate-imx8-add-hilscher-env.patch \
+	file://compulab-iotgate-imx8-disable-module-detection.patch \
 	file://pxe_add_bootargs_append_func.patch \
 	file://machine_config.h \
 	file://defconfig \
