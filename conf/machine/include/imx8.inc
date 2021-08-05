@@ -34,7 +34,7 @@ HILSCHER_RESCUE_IMAGE ??= "hilscher-rescue-image"
 
 BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deploy"
 
-SERIAL_CONSOLE = "115200 ttymxc2"
+SERIAL_CONSOLES = "115200;ttymxc2"
 
 # Don't build USB images (.zip) and recovery SWU
 NETFIELD_IMAGES = ""
