@@ -30,6 +30,7 @@ SRC_URI_append += " \
 	file://0001-imx8mm.dtsi-Add-a-label-to-soc-node.patch \
 	file://bluetooth_more_csr_quirks.patch \
 	file://rfkill_gpio_ofsupport.patch \
+	file://disable_msi_if_cifx_found.patch \
 	file://tpm.cfg \
 	file://led_timer.cfg \
 "
