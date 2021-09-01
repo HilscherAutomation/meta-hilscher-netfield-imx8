@@ -1,0 +1,23 @@
+Don't read firmware identification as this confuses the special netX09 sensorEDGE firmware that also accesses the DPM.
+When host reads mailbox via channel0/1 handshake flags may get stuck
+
+diff -aurN a/Toolkit/Source/cifXInit.c b/libcifx/Toolkit/Source/cifXInit.c
+--- a/Toolkit/Source/cifXInit.c	2019-12-04 19:11:34.000000000 +0100
++++ b/Toolkit/Source/cifXInit.c	2021-08-27 13:38:24.735345547 +0200
+@@ -3180,6 +3180,7 @@
+               /* make sure the channel is READY and we have also to handle COS flags in this case! */
+               if( DEV_WaitForReady_Poll(ptChannelInst, 20))
+               {
++#if 0
+                 int32_t lTempError = CIFX_NO_ERROR;
+                 if ( CIFX_NO_ERROR != (lTempError = cifXReadFirmwareIdent( ptDevInstance,
+                                                                            ptChannelInst->ulChannelNumber,
+@@ -3193,7 +3194,7 @@
+                               "Failed to read firmware identification for channel = %d, error: 0x%08X\r\n", ptChannelInst->ulChannelNumber, lTempError);
+                   }
+                 }
+-
++#endif
+                 if(g_ulTraceLevel & TRACE_LEVEL_INFO)
+                 {
+                   USER_Trace(ptDevInstance,
