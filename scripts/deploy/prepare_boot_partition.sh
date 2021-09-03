@@ -20,5 +20,5 @@ elif [ "${image_type}" == "production_scan" ]; then
 
 	# Copy production_scan_image squash fs
 	cp ${ROOTFS} rootfs.img
-	openssl dgst -sha512 -sign ${signing_key} -out rootfs.img.sig rootfs.img
+	openssl dgst ${engine_params} -sha512 -sign ${signing_key} -out rootfs.img.sig rootfs.img
 fi
