@@ -1,0 +1,33 @@
+From 89b46eaba99bacc8ccfe12bda8ee0a4b257ccabf Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Sun, 26 Sep 2021 14:00:29 +0200
+Subject: [PATCH] bootm: Disable HAB verification for fitImages.
+
+---
+ cmd/bootm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/cmd/bootm.c b/cmd/bootm.c
+index 03ea3b8998..dede60b611 100644
+--- a/cmd/bootm.c
++++ b/cmd/bootm.c
+@@ -123,6 +123,7 @@ int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ 			return do_bootm_subcommand(cmdtp, flag, argc, argv);
+ 	}
+ 
++	if (0) { // Disable HAB verification for fitImages
+ #ifdef CONFIG_IMX_HAB
+ 	extern int authenticate_image(
+ 			uint32_t ddr_start, uint32_t raw_image_size);
+@@ -183,7 +184,7 @@ int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ 	}
+ #endif
+ #endif
+-
++	}
+ 	return do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START |
+ 		BOOTM_STATE_FINDOS | BOOTM_STATE_FINDOTHER |
+ 		BOOTM_STATE_LOADOS |
+-- 
+2.17.1
+

@@ -1,0 +1,69 @@
+#!/bin/bash -ex
+
+SOC=$(pwd)
+CST=cst-hsm
+
+command -v ${CST} &>/dev/null
+[ $? -ne 0 ] && { echo "${CST} - binary is missing, exiting ..."; exit 1; }
+
+O=${SOC}/signed/boot-scr
+install -d ${O}
+
+ifile=boot.scr
+padfile=${O}/${ifile}.pad
+ivtfile=${O}/${ifile}.ivt
+ofile=${O}/${ifile}.signed
+
+loadaddr=0x50000000
+
+ivt_size=0x20
+ivt_ptr=${loadaddr}
+
+dd if=${ifile} of=${padfile} bs=4 conv=sync
+
+entry_size=$(stat -c %s ${padfile})
+entry_ptr=$(( ${loadaddr} + ${ivt_size} ))
+
+csf_ptr=$(( ${loadaddr} + ${ivt_size} + ${entry_size} ))
+
+ivtbin=${O}/ivt.bin
+genivt=${O}/genivt
+cat << eoscript > ${genivt}
+#! /usr/bin/perl -w
+use strict;
+open(my \$out, '>:raw', '${ivtbin}') or die "Unable to open: \$!";
+print \$out pack("V", 0x412000D1); # Signature
+print \$out pack("V", ${entry_ptr}); # Load Address (*load_address)
+print \$out pack("V", 0x0);
+print \$out pack("V", 0x0);
+print \$out pack("V", 0x0);
+print \$out pack("V", ${ivt_ptr}); # Self Pointer (*ivt)
+print \$out pack("V", ${csf_ptr}); # CSF Pointer (*csf)
+print \$out pack("V", 0x0);
+close(\$out);
+eoscript
+chmod a+x ${genivt}
+${genivt}
+
+cat ${ivtbin} ${padfile} > ${ivtfile}
+
+csfbin=${O}/csf.bin
+
+i_csfaddfile=csf_additional_images.in
+o_csfaddfile=${O}/${i_csfaddfile}
+
+BLOCKS="  ${loadaddr} 0x00000000 $(( ${ivt_size} + ${entry_size} )) \"${ivtfile}\" "
+(cat ${i_csfaddfile} ; cat <<< ${BLOCKS} ) > ${o_csfaddfile}
+
+${CST} --i ${o_csfaddfile} --o ${csfbin}
+
+cat ${ivtfile} ${csfbin} > ${ofile}
+
+cat << eof >> ${O}/hab_auth_img.cmd
+setenv ivt_off $(( ${ivt_ptr} - ${loadaddr} ))
+load mmc \${mmcdev}:\${mmcpart} \${loadaddr} ${ifile}
+hab_auth_img \${loadaddr} \${filesize} \${ivt_off}
+source $(printf %x ${entry_ptr})
+eof
+
+#rm -rf ${ivtfile} ${ivtbin} ${padfile} ${csfbin} ${csfaddfile} in_${csfaddfile} ${genivt}

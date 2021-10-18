@@ -96,12 +96,14 @@ KERNEL_IMAGETYPES_append += "fitImage"
 #############################################################################
 # Contents of boot partition (excluding rootfs)
 #############################################################################
-IMAGE_BOOT_FILES = "boot.scr ${IMX_BOOT_FILE};boot.bin"
+IMAGE_BOOT_FILES = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.signed;boot.scr ${IMX_BOOT_FILE}.signed;boot.bin', \
+    'boot.scr ${IMX_BOOT_FILE};boot.bin', d)}"
 
 #############################################################################
 # WIC images
 #############################################################################
-WKS_FILE = "hilscher-gpt-boot-rescue-system-lvm.wks.in"
+WKS_FILE = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hilscher-gpt-hab-boot-rescue-system-lvm.wks.in', 'hilscher-gpt-boot-rescue-system-lvm.wks.in', d)}"
+WKS_FILE_DEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
 
 WIC_BOOT_PART_CONTENT ??= "${IMAGE_BOOT_FILES}"
 WIC_RESCUE_PART_CONTENT ??= "${HILSCHER_RESCUE_IMAGE_LINK_NAME}.squashfs rboot.cfg fitImage initrd-api-part-cfg;initrd-api"
@@ -110,7 +112,7 @@ WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage"
 #############################################################################
 # SWU images
 #############################################################################
-SWU_FILES += "${IMX_BOOT_FILE};boot.bin"
+SWU_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '${IMX_BOOT_FILE}.signed;boot1.bin' ,'${IMX_BOOT_FILE};boot.bin', d)}"
 SWU_FILE_ATTRIBUTES += "boot.bin;path=\"/dev/mmcblk0\";offset=\"${IMX_BOOT_SEEK}K\";name=\"boot.bin\";version;install-if-different=true"
 SWU_SCRIPTS += "swupdate/helper.lua;helper.lua"
 
