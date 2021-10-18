@@ -19,7 +19,7 @@ SRC_URI_append += " \
 	file://pxe_add_bootargs_append_func.patch \
 	file://machine_config.h \
 	file://defconfig \
-	"
+"
 
 SRC_URI_append_netfield-iolink-edge-gw-revx += "file://netfield-iolink-edge-gw-revx.cfg"
 
@@ -125,20 +125,25 @@ BOOT_TOOLS ??= "imx-boot-tools"
 
 do_compile[depends] += "imx-atf:do_deploy firmware-imx-8m:do_deploy"
 do_compile_prepend() {
-	# Copy ARM Trusted Firmware to build directory
 	if [ -n "${UBOOT_CONFIG}" ]; then
 		for config in ${UBOOT_MACHINE}; do
+			# Copy ARM Trusted Firmware to build directory
 			cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/bl31-${PLATFORM}.bin ${B}/${config}/bl31.bin
+
+			# Copy DDR training firmware to source directory
+			for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
+				cp -f ${DEPLOY_DIR_IMAGE}/${ddr_firmware} ${B}/${config}
+			done
 		done
 	else
+		# Copy ARM Trusted Firmware to build directory
 		cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/bl31-${PLATFORM}.bin ${B}/bl31.bin
-	fi
 
-	# Copy DDR training firmware to source directory
-	for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
-		#cp -f ${DEPLOY_DIR_IMAGE}/${ddr_firmware} ${S}
-		cp -f ${DEPLOY_DIR_IMAGE}/${ddr_firmware} ${B}
-	done
+		# Copy DDR training firmware to source directory
+		for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
+			cp -f ${DEPLOY_DIR_IMAGE}/${ddr_firmware} ${B}
+		done
+	fi
 
 	export_devicetree_settings
 }
@@ -161,6 +166,3 @@ do_deploy_append() {
 
     ln -sf flash.bin ${DEPLOYDIR}/${IMX_BOOT_FILE}
 }
-
-COMPATIBLE_MACHINE_niot-e-nfl90-q2n16-n-revx = ".*"
-COMPATIBLE_MACHINE_netfield-iolink-edge-gw-revx = ".*"
