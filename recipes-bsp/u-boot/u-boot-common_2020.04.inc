@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-2020-04:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx_2020.04:"
 
 DEPENDS_append += "u-boot-tools-native"
 
