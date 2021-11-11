@@ -9,7 +9,8 @@ require conf/machine/include/imx-base.inc
 require conf/machine/include/tune-cortexa53.inc
 
 IMAGE_CLASSES_append += "hilscher_image_types"
-IMAGE_FSTYPES += "wic.bz2 swu fastboot licenses.tar.bz2"
+FASTBOOT_SUPPORT = "1"
+IMAGE_FSTYPES += "wic.bz2 swu ${@'fastboot' if d.getVar('FASTBOOT_SUPPORT')=='1' else ''} licenses.tar.bz2"
 SOC_DEFAULT_IMAGE_FSTYPES = ""
 
 # meta-bsp-imx8mm adds git-lfs and bison to hosttools which is not needed / working in our docker env
