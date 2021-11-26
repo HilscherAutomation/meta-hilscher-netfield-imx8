@@ -33,7 +33,7 @@ for conf in boot.cfg aboot.cfg rboot.cfg; do
 					test "${conf}" = "aboot.cfg" && type="(ALTERNATIVE)"
 					test "${conf}" = "rboot.cfg" && type="(RESCUE)"
 					setenv bootmenu_${mi} usb${dev}: ${description} ${type} = "
-						setenv bootargs console=${console} bootCfg=/dev/sda${part}/${conf} rootwait rw rootdelay=1 roottimeout=10 loglevel=7 pci=nomsi;
+						setenv bootargs console=${console} bootCfg=/dev/sda${part}/${conf} rootwait rw rootdelay=1 roottimeout=10 loglevel=7;
 						load usb ${dev}:${part} ${loadaddr} ${kernel};
 						bootm
 					"
@@ -52,7 +52,7 @@ for conf in boot.cfg aboot.cfg rboot.cfg; do
 					test "${conf}" = "aboot.cfg" && type="(ALTERNATIVE)"
 					test "${conf}" = "rboot.cfg" && type="(RESCUE)"
 					setenv bootmenu_${mi} mmc${dev}: ${description} ${type} = "
-						setenv bootargs console=${console} bootCfg=/dev/mmcblk${dev}p${part}/${conf} rootwait rw rootdelay=1 roottimeout=10 loglevel=7 pci=nomsi;
+						setenv bootargs console=${console} bootCfg=/dev/mmcblk${dev}p${part}/${conf} rootwait rw rootdelay=1 roottimeout=10 loglevel=7;
 						load mmc ${dev}:${part} ${loadaddr} ${kernel};
 						bootm
 					"

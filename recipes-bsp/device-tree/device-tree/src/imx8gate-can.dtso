@@ -1,0 +1,83 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include "../freescale/imx8mm-pinfunc.h"
+
+/ {
+	compatible = "sb-iotgimx8-can", "sb-iotgimx8", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			regulator-can0term {
+				compatible = "regulator-fixed";
+				regulator-name = "can0_term";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				gpio = <&gpio3 8 GPIO_ACTIVE_LOW>;
+				regulator-always-on;
+				enable-active-low;
+			};
+
+			regulator-can1term {
+				compatible = "regulator-fixed";
+				regulator-name = "can1_term";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				gpio = <&gpio3 9 GPIO_ACTIVE_LOW>;
+				regulator-always-on;
+				enable-active-low;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&ecspi2>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			fsl,spi-num-chipselects = <1>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs>;
+			cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
+			status = "okay";
+
+			can0: can@0 {
+				compatible = "microchip,mcp2518fd";
+				reg = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_can0 &pinctrl_can0_term>;
+				interrupt-parent = <&gpio5>;
+				interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
+				spi-max-frequency = <20000000>;
+				clocks = <&clk40m>;
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&ecspi3>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			fsl,spi-num-chipselects = <1>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_ecspi3 &pinctrl_ecspi3_cs>;
+			cs-gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+			status = "okay";
+
+			can1: can@0 {
+				compatible = "microchip,mcp2518fd";
+				reg = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_can1 &pinctrl_can1_term>;
+				interrupt-parent = <&gpio5>;
+				interrupts = <28 IRQ_TYPE_LEVEL_LOW>;
+				spi-max-frequency = <20000000>;
+				clocks = <&clk40m>;
+			};
+		};
+	};
+};

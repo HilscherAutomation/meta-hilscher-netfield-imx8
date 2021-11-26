@@ -1,0 +1,35 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include "../freescale/imx8mm-pinfunc.h"
+
+/ {
+	compatible = "sb-iotgimx8-ied", "sb-iotgimx8", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&ecspi2>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			fsl,spi-num-chipselects = <1>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs>;
+			cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
+			status = "okay";
+
+			can0: can@0 {
+				compatible = "microchip,mcp2518fd";
+				reg = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_can0>;
+				interrupt-parent = <&gpio5>;
+				interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
+				spi-max-frequency = <20000000>;
+				clocks = <&clk40m>;
+				status = "okay";
+			};
+		};
+	};
+};

@@ -1,0 +1,13 @@
+[Unit]
+Description=Setup uart1 mode
+//ConditionPathExists=/etc/default/uart1
+
+[Service]
+Type=oneshot
+RemainAfterExit=Yes
+StandardOutput=syslog
+ExecStart=/sbin/uart1-mode.sh start
+ExecStop=/sbin/uart1-mode.sh stop
+
+[Install]
+WantedBy=multi-user.target

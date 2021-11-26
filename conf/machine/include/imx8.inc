@@ -12,6 +12,13 @@ IMAGE_CLASSES_append += "hilscher_image_types"
 IMAGE_FSTYPES += "wic.bz2 swu fastboot licenses.tar.bz2"
 SOC_DEFAULT_IMAGE_FSTYPES = ""
 
+# meta-bsp-imx8mm adds git-lfs and bison to hosttools which is not needed / working in our docker env
+HOSTTOOLS_remove += "git-lfs bison"
+# meta-bsp-imx8mm adds firmware-imx-sdma if distro != dunfell which is unavailable in netFIELD which is based on dunfell
+CORE_IMAGE_EXTRA_INSTALL_remove += "firmware-imx-sdma"
+# meta-bsp-imx8mm adds kernel image to all images which makes core-image-minimal-initramfs too large
+IMAGE_INSTALL_remove += "kernel-image kernel-modules kernel-devicetree"
+
 #############################################################################
 # Preferred components/settings
 #############################################################################
@@ -27,7 +34,7 @@ HILSCHER_RESCUE_IMAGE ??= "hilscher-rescue-image"
 
 BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deploy"
 
-SERIAL_CONSOLE = "115200 ttymxc2"
+SERIAL_CONSOLES = "115200;ttymxc2"
 
 # Don't build USB images (.zip) and recovery SWU
 NETFIELD_IMAGES = ""
@@ -89,21 +96,27 @@ KERNEL_IMAGETYPES_append += "fitImage"
 #############################################################################
 # Contents of boot partition (excluding rootfs)
 #############################################################################
-IMAGE_BOOT_FILES = "boot.scr ${IMX_BOOT_FILE};boot.bin"
+IMAGE_BOOT_FILES = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.signed;boot.scr ${IMX_BOOT_FILE}.signed;boot.bin', \
+    'boot.scr ${IMX_BOOT_FILE};boot.bin', d)}"
 
 #############################################################################
 # WIC images
 #############################################################################
-WKS_FILE = "hilscher-gpt-boot-rescue-system-lvm.wks.in"
+WKS_FILE = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hilscher-gpt-hab-boot-rescue-system-lvm.wks.in', 'hilscher-gpt-boot-rescue-system-lvm.wks.in', d)}"
+WKS_FILE_DEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
+
+IMAGE_FSTYPES_remove_pn-hilscher-rescue-image += "squashfs_signed"
+IMAGE_FSTYPES_append_pn-hilscher-rescue-image += "squashfs_xz_signed"
 
 WIC_BOOT_PART_CONTENT ??= "${IMAGE_BOOT_FILES}"
-WIC_RESCUE_PART_CONTENT ??= "${HILSCHER_RESCUE_IMAGE_LINK_NAME}.squashfs rboot.cfg fitImage initrd-api-part-cfg;initrd-api"
+WIC_RESCUE_PART_CONTENT ??= "${HILSCHER_RESCUE_IMAGE_LINK_NAME}.squashfs-xz;${HILSCHER_RESCUE_IMAGE}-${MACHINE}-${IMAGE_VERSION_SUFFIX}.squashfs \
+                             rboot.cfg fitImage initrd-api-part-cfg;initrd-api"
 WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage"
 
 #############################################################################
 # SWU images
 #############################################################################
-SWU_FILES += "${IMX_BOOT_FILE};boot.bin"
+SWU_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '${IMX_BOOT_FILE}.signed;boot1.bin' ,'${IMX_BOOT_FILE};boot.bin', d)}"
 SWU_FILE_ATTRIBUTES += "boot.bin;path=\"/dev/mmcblk0\";offset=\"${IMX_BOOT_SEEK}K\";name=\"boot.bin\";version;install-if-different=true"
 SWU_SCRIPTS += "swupdate/helper.lua;helper.lua"
 
@@ -144,6 +157,7 @@ HILSCHER_OVERLAYTARGETS ??= "${NETIOT_OVERLAY_DIRS}"
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/recipes-images/compulab-ucm-imx8m-mini.bb"
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/bt-start/bt-start_%.bbappend"
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/u-boot/u-boot-imx-fw-utils_2019.04.bbappend"
+BBMASK += "meta-bsp-imx8mm/recipes-bsp/u-boot-scr/u-boot-script.bbappend"
 
 BBMASK += "meta-bsp-imx8mm/recipes-bsp/recipes-images/base-files_%.bbappend"
 BBMASK += "meta-bsp-imx8mm/recipes-kernel/linux/linux-imx_5.4.%.bbappend"

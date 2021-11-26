@@ -2,6 +2,16 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/linux-5.4:${THISDIR}/files:${THISDIR}/com
 
 require recipes-kernel/linux/netfield-linux.inc
 
+# Prevent automatically inclusion of kernel-image into rootfs/image
+RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
+
+# Add support for dtso files
+SRC_URI_append_netfield-compact-x8m-rev1 += " \
+    file://0015-of-Add-dt-overlay-configfs-interface-v2.patch \
+    file://of_configfs.cfg \
+"
+SRC_URI_append_netfield-compact-x8m-rev1 += "file://netfield-compact-x8m-rev1.cfg"
+
 # Add support for yocto-kernel-cache
 # ----------------------------------
 require recipes-kernel/linux/linux-yocto.inc
@@ -20,6 +30,7 @@ SRC_URI_append += " \
 	file://0001-imx8mm.dtsi-Add-a-label-to-soc-node.patch \
 	file://bluetooth_more_csr_quirks.patch \
 	file://rfkill_gpio_ofsupport.patch \
+	file://disable_msi_if_cifx_found.patch \
 	file://tpm.cfg \
 	file://led_timer.cfg \
 "
@@ -89,7 +100,3 @@ do_compile_prepend() {
 # ------------------------------------------------------------------------------
 # ATTENTION: When updating recipe, make sure to recheck if whitelisted CVEs still apply
 CVE_CHECK_WHITELIST_append += "CVE-2018-20784"
-
-# ------------------------------------------------------------------------------
-COMPATIBLE_MACHINE_niot-e-nfl90-q2n16-n-revx = ".*"
-COMPATIBLE_MACHINE_netfield-iolink-edge-gw-revx = ".*"

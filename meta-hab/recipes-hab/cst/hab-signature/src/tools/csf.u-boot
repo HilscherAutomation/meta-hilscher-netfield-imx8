@@ -1,0 +1,33 @@
+#!/bin/bash -ex
+
+SOC=$(pwd)
+CST=cst-hsm
+
+command -v ${CST} &>/dev/null
+[ $? -ne 0 ] && { echo "${CST} - binary is missing, exiting ..."; exit 1; }
+
+O=${SOC}/signed/u-boot
+install -d ${O}
+
+ifile=flash.bin
+ofile=${ifile}.signed
+
+eval $(awk  -F":" '(/hab block/)&&(gsub(/ /,"_",$1))&&($0=$1"=\""$2"\"")' ${SOC}/flash.log)
+
+_spl_hab_block+=" \"${SOC}/${ifile}\""
+_sld_hab_block+=" \"${SOC}/${ifile}\""
+
+blocks=$(awk -v SOC=${SOC} -v ifile=${ifile} '(/^0x/)&&($0=","$0" \""SOC"/"ifile"\" \\\n")' ORS=" " ${SOC}/print_fit_hab.log)
+
+(cat ${SOC}/csf_fit.in ; cat <<< $_sld_hab_block" \ " ; cat <<< ${blocks} ) > ${O}/csf_fit.txt
+(cat ${SOC}/csf_spl.in ; cat <<< $_spl_hab_block) > ${O}/csf_spl.txt
+
+${CST} -i ${O}/csf_spl.txt -o ${O}/csf_spl.bin
+${CST} -i ${O}/csf_fit.txt -o ${O}/csf_fit.bin
+
+eval $(awk '(/csf_off|sld_csf_off/)&&($0=$1"="$2)' ${SOC}/flash.log) 
+
+cp ${SOC}/${ifile} ${O}/${ofile}
+
+dd if=${O}/csf_spl.bin of=${O}/${ofile} seek=$((${csf_off})) bs=1 conv=notrunc
+dd if=${O}/csf_fit.bin of=${O}/${ofile} seek=$((${sld_csf_off})) bs=1 conv=notrunc

@@ -1,0 +1,26 @@
+From caf857402ac237812e373a6e23a9c836da926a06 Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Thu, 18 Nov 2021 16:59:05 +0100
+Subject: [PATCH] Fix HAB issues when using AUTOBOOT_STO_STR_SHA256.
+
+see https://community.nxp.com/t5/i-MX-Processors/Error-using-CONFIG-AUTOBOOT-STOP-STR-SHA256-in-U-Boot/m-p/1164388
+---
+ common/hash.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/common/hash.c b/common/hash.c
+index ff4986a619..01158825e6 100644
+--- a/common/hash.c
++++ b/common/hash.c
+@@ -179,7 +179,7 @@ static struct hash_algo hash_algo[] = {
+ 		.digest_size	= SHA256_SUM_LEN,
+ 		.chunk_size	= CHUNKSZ_SHA256,
+ #ifdef CONFIG_SHA_HW_ACCEL
+-		.hash_func_ws	= hw_sha256,
++		.hash_func_ws	= sha256_csum_wd,
+ #else
+ 		.hash_func_ws	= sha256_csum_wd,
+ #endif
+-- 
+2.17.1
+

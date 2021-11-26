@@ -1,8 +1,6 @@
-/dts-v1/;
-
+#include "../compulab/ucm-imx8m-mini.dts"
 #include "../freescale/imx8mm.dtsi"
 #include "../freescale/imx8mm-pinfunc.h"
-#include "../compulab/ucm-imx8m-mini.dtsi"
 
 #include "pad_config.h"
 
@@ -280,6 +278,13 @@
 				MX8MM_IOMUXC_UART2_TXD_GPIO5_IO25     (PU|FSR|DSEx1)
 			>;
 		};
+
+		pinctrl_i2c1: i2c1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_I2C1_SCL_I2C1_SCL                  0x400001c3
+				MX8MM_IOMUXC_I2C1_SDA_I2C1_SDA                  0x400001c3
+			>;
+		};
 	};
 };
 
@@ -422,6 +427,9 @@
 
 &i2c2 { /* SOM: PMIC, RTC, EEprom*/
 	status = "okay";
+
+	rtc0: rtc@69 {
+	};
 };
 
 &i2c3 {
