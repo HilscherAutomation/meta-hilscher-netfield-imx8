@@ -51,6 +51,8 @@ CIFX_SPI_CONFIGS ??= "Device=spidev2.0;Speed=10000000;Mode=3;ChunkSize=0"
 SYSTEMD_DEFAULT_TARGET ??= "system-up.target"
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "system-up"
 
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
+
 #############################################################################
 # Keys
 #############################################################################
@@ -107,7 +109,6 @@ IMAGE_BOOT_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.s
 # WIC images
 #############################################################################
 WKS_FILE = "hilscher-gpt-boot-rescue-system-lvm.wks.in"
-WKS_FILE_DEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
 
 WIC_BOOT_PART_CONTENT ??= "${IMAGE_BOOT_FILES}"
 WIC_RESCUE_PART_CONTENT ??= "${HILSCHER_RESCUE_IMAGE_LINK_NAME}.squashfs-xz;${HILSCHER_RESCUE_IMAGE}-${MACHINE}-${IMAGE_VERSION_SUFFIX}.squashfs \

@@ -63,3 +63,6 @@ do_deploy() {
 	install -m 0644 ${B}/hab/signed/boot-scr/boot.scr.signed ${DEPLOYDIR}
 }
 addtask deploy after do_compile
+
+# NOTE: Allow an empty package to enable adding this to MACHINE_ESSENTIAL_EXTRA _ * variables.
+ALLOW_EMPTY_${PN} = "1"
