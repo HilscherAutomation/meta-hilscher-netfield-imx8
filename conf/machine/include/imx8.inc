@@ -9,7 +9,8 @@ require conf/machine/include/imx-base.inc
 require conf/machine/include/tune-cortexa53.inc
 
 IMAGE_CLASSES_append += "hilscher_image_types"
-IMAGE_FSTYPES += "wic.bz2 swu fastboot licenses.tar.bz2"
+FASTBOOT_SUPPORT = "1"
+IMAGE_FSTYPES += "wic.bz2 swu ${@'fastboot' if d.getVar('FASTBOOT_SUPPORT')=='1' else ''} licenses.tar.bz2"
 SOC_DEFAULT_IMAGE_FSTYPES = ""
 
 # meta-bsp-imx8mm adds git-lfs and bison to hosttools which is not needed / working in our docker env
@@ -31,6 +32,8 @@ PREFERRED_PROVIDER_virtual/kernel = "linux-fslc-imx"
 # Note: INITRAMFS_IMAGE must only be defined weakly!
 INITRAMFS_IMAGE ?= "core-image-minimal-initramfs"
 HILSCHER_RESCUE_IMAGE ??= "hilscher-rescue-image"
+IMAGE_FSTYPES_remove_pn-hilscher-rescue-image += "squashfs_signed"
+IMAGE_FSTYPES_append_pn-hilscher-rescue-image += "squashfs_xz_signed"
 
 BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deploy"
 
@@ -47,6 +50,8 @@ CIFX_SPI_CONFIGS ??= "Device=spidev2.0;Speed=10000000;Mode=3;ChunkSize=0"
 
 SYSTEMD_DEFAULT_TARGET ??= "system-up.target"
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "system-up"
+
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
 
 #############################################################################
 # Keys
@@ -69,6 +74,7 @@ PREFERRED_PROVIDER_virtual/bootloader="u-boot-imx"
 WKS_FILE_DEPENDS_remove_mx8 += "imx-boot"
 
 IMX_BOOT_FILE = "imx-boot"
+IMX_BOOT_FILE .= "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '.signed', '', d)}"
 IMX_BOOT_SEEK = "33"
 
 UBOOT_MACHINE = "${MACHINE}_defconfig"
@@ -96,17 +102,13 @@ KERNEL_IMAGETYPES_append += "fitImage"
 #############################################################################
 # Contents of boot partition (excluding rootfs)
 #############################################################################
-IMAGE_BOOT_FILES = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.signed;boot.scr ${IMX_BOOT_FILE}.signed;boot.bin', \
-    'boot.scr ${IMX_BOOT_FILE};boot.bin', d)}"
+IMAGE_BOOT_FILES  = "${IMX_BOOT_FILE};boot.bin"
+IMAGE_BOOT_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.signed;boot.scr', 'boot.scr', d)}"
 
 #############################################################################
 # WIC images
 #############################################################################
-WKS_FILE = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hilscher-gpt-hab-boot-rescue-system-lvm.wks.in', 'hilscher-gpt-boot-rescue-system-lvm.wks.in', d)}"
-WKS_FILE_DEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
-
-IMAGE_FSTYPES_remove_pn-hilscher-rescue-image += "squashfs_signed"
-IMAGE_FSTYPES_append_pn-hilscher-rescue-image += "squashfs_xz_signed"
+WKS_FILE = "hilscher-gpt-boot-rescue-system-lvm.wks.in"
 
 WIC_BOOT_PART_CONTENT ??= "${IMAGE_BOOT_FILES}"
 WIC_RESCUE_PART_CONTENT ??= "${HILSCHER_RESCUE_IMAGE_LINK_NAME}.squashfs-xz;${HILSCHER_RESCUE_IMAGE}-${MACHINE}-${IMAGE_VERSION_SUFFIX}.squashfs \
@@ -116,7 +118,7 @@ WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage"
 #############################################################################
 # SWU images
 #############################################################################
-SWU_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '${IMX_BOOT_FILE}.signed;boot1.bin' ,'${IMX_BOOT_FILE};boot.bin', d)}"
+SWU_FILES += "${IMX_BOOT_FILE};boot.bin"
 SWU_FILE_ATTRIBUTES += "boot.bin;path=\"/dev/mmcblk0\";offset=\"${IMX_BOOT_SEEK}K\";name=\"boot.bin\";version;install-if-different=true"
 SWU_SCRIPTS += "swupdate/helper.lua;helper.lua"
 

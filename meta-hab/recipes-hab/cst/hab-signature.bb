@@ -56,7 +56,13 @@ inherit deploy
 do_deploy() {
 	install -m 0644 ${B}/hab/signed/srk-fuse/srk-fuse.out ${DEPLOYDIR}
 	install -m 0644 ${B}/hab/signed/u-boot/flash.bin.signed ${DEPLOYDIR}
-	ln -sf flash.bin.signed ${DEPLOYDIR}/${IMX_BOOT_FILE}.signed
+
+	# NOTE: If HAB is activated, IMX_BOOT_FILE is already extended by the machine configuration with .signed.
+	ln -sf flash.bin.signed ${DEPLOYDIR}/${IMX_BOOT_FILE}
+
 	install -m 0644 ${B}/hab/signed/boot-scr/boot.scr.signed ${DEPLOYDIR}
 }
 addtask deploy after do_compile
+
+# NOTE: Allow an empty package to enable adding this to MACHINE_ESSENTIAL_EXTRA _ * variables.
+ALLOW_EMPTY_${PN} = "1"
