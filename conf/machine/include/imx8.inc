@@ -46,7 +46,7 @@ MACHINE_FEATURES += "bluetooth optee tpm2"
 MACHINE_SOCARCH_FILTER_append_mx8mm = "virtual/libopenvg virtual/libgles1 virtual/libgles2 virtual/egl virtual/mesa virtual/libgl virtual/libg2d"
 MACHINE_FIRMWARE += "linux-firmware-bcm4339 linux-firmware-imx-sdma-imx7d"
 
-CIFX_SPI_CONFIGS ??= "Device=spidev2.0;Speed=10000000;Mode=3;ChunkSize=0"
+CIFX_SPI_CONFIGS ?= "Device=spidev2.0;Speed=10000000;Mode=3;ChunkSize=0"
 
 SYSTEMD_DEFAULT_TARGET ??= "system-up.target"
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "system-up"
