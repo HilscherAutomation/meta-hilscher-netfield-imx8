@@ -10,6 +10,7 @@ DEPENDS = " \
 	gnutls-native \
 	libp11-native \
 	pkcs11-proxy-native \
+	xxd-native \
 "
 
 SRC_URI = " \
@@ -54,7 +55,9 @@ do_compile () {
 
 inherit deploy
 do_deploy() {
-	install -m 0644 ${B}/hab/signed/srk-fuse/srk-fuse.out ${DEPLOYDIR}
+	install -d ${DEPLOYDIR}/soc-fuses
+	install -m 0644 ${B}/hab/signed/srk-fuse/*.bin ${DEPLOYDIR}/soc-fuses
+	install -m 0744 ${B}/hab/signed/srk-fuse/*.sh ${DEPLOYDIR}/soc-fuses
 	install -m 0644 ${B}/hab/signed/u-boot/flash.bin.signed ${DEPLOYDIR}
 
 	# NOTE: If HAB is activated, IMX_BOOT_FILE is already extended by the machine configuration with .signed.
