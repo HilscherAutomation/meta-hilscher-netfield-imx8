@@ -19,6 +19,7 @@ SRC_URI_append += " \
 	file://pxe_add_bootargs_append_func.patch \
 	file://machine_config.h \
 	file://defconfig \
+	${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '', 'file://keyed_boot.cfg' ,d)} \
 "
 
 SRC_URI_append_netfield-iolink-edge-gw-revx += "file://netfield-iolink-edge-gw-revx.cfg"
