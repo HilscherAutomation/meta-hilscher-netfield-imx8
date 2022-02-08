@@ -106,12 +106,12 @@ platform_init_run() {
 	mount -t configfs none /sys/kernel/config
 
 	# Detect platform parameters (see u-boot board/compulab/iot-gate-imx8/iot-gate-imx8.c)
-	platform_type="empty"
+	extension="none"
 
 	i2c_devices=$(i2cdetect -y 3)
 	if echo "$i2c_devices" | grep -q " 52 "; then
 		# POED module has I2C EEPROM at 0x52
-		platform_type="poed"
+		extension="poed"
 		echo "eeprom 0x52" > /sys/bus/i2c/devices/i2c-3/new_device
 	elif echo "$i2c_devices" | grep -q " 54 "; then
 		echo "eeprom 0x54" > /sys/bus/i2c/devices/i2c-3/new_device
@@ -119,15 +119,15 @@ platform_init_run() {
 		if echo "$i2c_devices" | grep -q " 22 "; then
 			# IED modules has a bus extender
 			echo "pca9555 0x22" > /sys/bus/i2c/devices/i2c-3/new_device
-			platform_type="ied"
+			extension="ied"
 		else
-			platform_type="can"
+			extension="can"
 		fi
 	fi
 
-	msg "Detected platform '$platform_type'"
+	msg "Detected extension module '$extension'"
 
-	case $platform_type in
+	case $extension in
 		"empty")
 		;;
 		"poed")

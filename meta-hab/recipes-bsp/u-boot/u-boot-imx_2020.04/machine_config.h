@@ -26,11 +26,13 @@
 	"netcon_down="SERIALCON_ENABLE"\0" \
 	"menu_last_cmd=setenv bootdelay 15; run netcon_up;\0" \
 	"menum=2\0" \
+	USBBOOT_COMMAND \
 	"set_default_led= \0" \
 
 #define CONFIG_BOOTCOMMAND BOOTCOMMAND_SCRIPT
 #define BOOTCOMMAND_SCRIPT \
 	"run set_default_led; " \
+	"run bootcmd_usb0; " \
 	"if test \"${boot_mode}\" = \"1\"; then " \
 		"run fastboot; " \
 	"fi; " \
@@ -103,3 +105,16 @@
 
 #define NETCON_ENABLE \
 	"setenv ipaddr $netcon_ip;setenv ncip $netcon_cl;setenv stdout nc; setenv stdin nc;" \
+
+#define USBBOOT_COMMAND  \
+	"usb_parts=1\0"                                                                                  \
+	"bootcmd_usb0="                                                                                  \
+		"if usb reset && usb dev; then "                                                         \
+			"for part in ${usb_parts}; do "                                                  \
+				"if test -e usb 0:${part} ${script}; then "                              \
+					"echo Found U-Boot script ${script}; "                           \
+					"load usb 0:${part} ${loadaddr} ${script}; source ${loadaddr}; " \
+					"echo SCRIPT FAILED: continuing...; "                            \
+				"fi; "                                                                   \
+			"done; "                                                                         \
+		"fi;\0"

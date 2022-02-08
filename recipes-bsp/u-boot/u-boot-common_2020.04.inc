@@ -24,9 +24,10 @@ SRC_URI_append += " \
 
 SRC_URI_append_netfield-iolink-edge-gw-revx += "file://netfield-iolink-edge-gw-revx.cfg"
 
-BOOT_SCRIPTS = "boot"
+BOOT_SCRIPTS = "boot boot-recovery"
 SRC_URI_append += " \
 	file://boot.cmd \
+	file://boot-recovery.cmd \
 "
 
 export_devicetree_settings() {
