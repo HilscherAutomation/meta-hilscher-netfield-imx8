@@ -9,26 +9,27 @@ command -v ${CST} &>/dev/null
 O=${SOC}/signed/boot-scr
 install -d ${O}
 
-ifile=boot.scr
-padfile=${O}/${ifile}.pad
-ivtfile=${O}/${ifile}.ivt
-ofile=${O}/${ifile}.signed
+for f in boot*.scr; do
+	ifile=$f
+	padfile=${O}/${ifile}.pad
+	ivtfile=${O}/${ifile}.ivt
+	ofile=${O}/${ifile}.signed
 
-loadaddr=0x50000000
+	loadaddr=0x50000000
 
-ivt_size=0x20
-ivt_ptr=${loadaddr}
+	ivt_size=0x20
+	ivt_ptr=${loadaddr}
 
-dd if=${ifile} of=${padfile} bs=4 conv=sync
+	dd if=${ifile} of=${padfile} bs=4 conv=sync
 
-entry_size=$(stat -c %s ${padfile})
-entry_ptr=$(( ${loadaddr} + ${ivt_size} ))
+	entry_size=$(stat -c %s ${padfile})
+	entry_ptr=$(( ${loadaddr} + ${ivt_size} ))
 
-csf_ptr=$(( ${loadaddr} + ${ivt_size} + ${entry_size} ))
+	csf_ptr=$(( ${loadaddr} + ${ivt_size} + ${entry_size} ))
 
-ivtbin=${O}/ivt.bin
-genivt=${O}/genivt
-cat << eoscript > ${genivt}
+	ivtbin=${O}/ivt.bin
+	genivt=${O}/genivt
+	cat << eoscript > ${genivt}
 #! /usr/bin/perl -w
 use strict;
 open(my \$out, '>:raw', '${ivtbin}') or die "Unable to open: \$!";
@@ -42,28 +43,31 @@ print \$out pack("V", ${csf_ptr}); # CSF Pointer (*csf)
 print \$out pack("V", 0x0);
 close(\$out);
 eoscript
-chmod a+x ${genivt}
-${genivt}
+	chmod a+x ${genivt}
+	${genivt}
 
-cat ${ivtbin} ${padfile} > ${ivtfile}
+	cat ${ivtbin} ${padfile} > ${ivtfile}
 
-csfbin=${O}/csf.bin
+	csfbin=${O}/csf.bin
 
-i_csfaddfile=csf_additional_images.in
-o_csfaddfile=${O}/${i_csfaddfile}
+	i_csfaddfile=csf_additional_images.in
+	o_csfaddfile=${O}/${ifile}.${i_csfaddfile}
 
-BLOCKS="  ${loadaddr} 0x00000000 $(( ${ivt_size} + ${entry_size} )) \"${ivtfile}\" "
-(cat ${i_csfaddfile} ; cat <<< ${BLOCKS} ) > ${o_csfaddfile}
+	BLOCKS="  ${loadaddr} 0x00000000 $(( ${ivt_size} + ${entry_size} )) \"${ivtfile}\" "
+	(cat ${i_csfaddfile} ; cat <<< ${BLOCKS} ) > ${o_csfaddfile}
 
-${CST} --i ${o_csfaddfile} --o ${csfbin}
+	${CST} --i ${o_csfaddfile} --o ${csfbin}
 
-cat ${ivtfile} ${csfbin} > ${ofile}
+	cat ${ivtfile} ${csfbin} > ${ofile}
 
-cat << eof >> ${O}/hab_auth_img.cmd
+	if [ ${ifile} = "boot.scr" ]; then
+		cat << eof >> ${O}/example.hab_auth_img.u-boot.sh
 setenv ivt_off $(( ${ivt_ptr} - ${loadaddr} ))
 load mmc \${mmcdev}:\${mmcpart} \${loadaddr} ${ifile}
 hab_auth_img \${loadaddr} \${filesize} \${ivt_off}
 source $(printf %x ${entry_ptr})
 eof
+	fi
 
-#rm -rf ${ivtfile} ${ivtbin} ${padfile} ${csfbin} ${csfaddfile} in_${csfaddfile} ${genivt}
+	rm -rf ${ivtfile} ${ivtbin} ${padfile} ${csfbin} ${csfaddfile} in_${csfaddfile} ${genivt}
+done
