@@ -35,6 +35,9 @@ SRC_URI_append += " \
 	file://led_timer.cfg \
 "
 
+# Enable module for qemu support
+SRC_URI_append += "file://binfmt_misc.cfg"
+
 # TPM2.0 via I2C support
 SRC_URI_append += "file://0001-added-support-of-ST-I2C-TPM.patch \
                    file://tpm_tcg_i2c.cfg"
