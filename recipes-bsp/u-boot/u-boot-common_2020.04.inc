@@ -19,13 +19,15 @@ SRC_URI_append += " \
 	file://pxe_add_bootargs_append_func.patch \
 	file://machine_config.h \
 	file://defconfig \
+	${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '', 'file://keyed_boot.cfg' ,d)} \
 "
 
 SRC_URI_append_netfield-iolink-edge-gw-revx += "file://netfield-iolink-edge-gw-revx.cfg"
 
-BOOT_SCRIPTS = "boot"
+BOOT_SCRIPTS = "boot boot-recovery"
 SRC_URI_append += " \
 	file://boot.cmd \
+	file://boot-recovery.cmd \
 "
 
 export_devicetree_settings() {
@@ -108,10 +110,14 @@ do_configure_prepend() {
 			ln -sf ${EXT_DTB} ${B}/arch/arm/dts/$(basename ${EXT_DTB})
 		fi
 	fi
-	# Add password for u-boot shell
-	if [ -n "${UBOOT_PW}" ]; then
-		sha256_pw=$(echo ${UBOOT_PW} | sha256sum | cut -d " " -f 1)
-		sed -i -e 's,.*\(CONFIG_AUTOBOOT_STOP_STR_SHA256\).*,\1="'${sha256_pw}'",g' ${S}/configs/$config
+	if [ "${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', 'true', 'false',d)}" = "false" ]; then
+		# Add password for u-boot shell
+		if [ -z "${UBOOT_PW}" ]; then
+			bbfatal "Please define a UBOOT_PW for this machine"
+		else
+			sha256_pw=$(echo ${UBOOT_PW} | sha256sum | cut -d " " -f 1)
+			sed -i -e 's,.*\(CONFIG_AUTOBOOT_STOP_STR_SHA256\).*,\1="'${sha256_pw}'",g' ${S}/configs/$config
+		fi
 	fi
 }
 

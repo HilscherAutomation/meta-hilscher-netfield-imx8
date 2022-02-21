@@ -10,7 +10,7 @@
 
 /* Initial environment variables */
 #define HILSCHER_CONFIG_EXTRA_ENV_SETTINGS \
-	"loadbootscript="LOAD_BOOT_SCRIPT"\0" \
+	"loadbootscript="MMC_LOAD_BOOT_SCRIPT"\0" \
 	"bootscript="RUN_BOOT_SCRIPT"\0" \
 	"loadimage="LOAD_IMAGE"\0" \
 	"fastboot="FASTBOOT_SCRIPT"\0" \
@@ -26,11 +26,13 @@
 	"netcon_down="SERIALCON_ENABLE"\0" \
 	"menu_last_cmd=setenv bootdelay 15; run netcon_up;\0" \
 	"menum=2\0" \
+	USBBOOT_COMMAND \
 	"set_default_led= \0" \
 
 #define CONFIG_BOOTCOMMAND BOOTCOMMAND_SCRIPT
 #define BOOTCOMMAND_SCRIPT \
 	"run set_default_led; " \
+	"run bootcmd_usb0; " \
 	"if test \"${boot_mode}\" = \"1\"; then " \
 		"run fastboot; " \
 	"fi; " \
@@ -51,8 +53,18 @@
 		"run bootcmd_pxe; " \
 	"done; " \
 
-#define LOAD_BOOT_SCRIPT \
-	"setenv ivt_off 0 && fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script} && hab_auth_img ${loadaddr} ${filesize} ${ivt_off} && source 50000020;" \
+#if defined(CONFIG_IMX_HAB)
+	/* security is enabled, so first verify (if fuses are setup) and then start image */
+	#define START_IMAGE "setexpr entrypoint ${loadaddr} + 20 && setenv ivt_off 0 && hab_auth_img ${loadaddr} ${filesize} ${ivt_off} && source ${entrypoint}"
+#else
+	#define START_IMAGE "source ${loadaddr}"
+#endif
+
+#define MMC_LOAD_BOOT_SCRIPT \
+	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script} && "START_IMAGE";"
+
+#define USB_LOAD_BOOT_SCRIPT \
+	"load usb ${0}:${part} ${loadaddr} ${script} && "START_IMAGE";"
 
 #define RUN_BOOT_SCRIPT \
 	"echo Running bootscript from mmc ...; source;" \
@@ -103,3 +115,16 @@
 
 #define NETCON_ENABLE \
 	"setenv ipaddr $netcon_ip;setenv ncip $netcon_cl;setenv stdout nc; setenv stdin nc;" \
+
+#define USBBOOT_COMMAND  \
+	"usb_parts=1\0"                                                                                  \
+	"bootcmd_usb0="                                                                                  \
+		"if usb reset && usb dev; then "                                                         \
+			"for part in ${usb_parts}; do "                                                  \
+				"if test -e usb 0:${part} ${script}; then "                              \
+					"echo Found U-Boot script ${script}; "                           \
+					USB_LOAD_BOOT_SCRIPT                                             \
+					"echo SCRIPT FAILED: continuing...; "                            \
+				"fi; "                                                                   \
+			"done; "                                                                         \
+		"fi;\0"

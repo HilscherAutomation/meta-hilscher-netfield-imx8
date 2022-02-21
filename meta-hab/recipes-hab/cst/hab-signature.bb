@@ -28,6 +28,7 @@ SRC_URI += " \
 	file://flash.log;subdir=${B}/hab \
 	file://print_fit_hab.log;subdir=${B}/hab \
 	file://boot.scr;subdir=${B}/hab \
+	file://boot-recovery.scr;subdir=${B}/hab \
 "
 do_fetch[depends] += "virtual/bootloader:do_deploy"
 do_fetch[cleandirs] += "${B}/hab"
@@ -50,6 +51,8 @@ do_compile () {
 	oe_runmake clean
 	oe_runmake srk-fuse
 	oe_runmake imx-boot
+
+	# NOTE: The boot-scr target signs all boot*.scr.
 	oe_runmake boot-scr
 }
 
@@ -63,7 +66,7 @@ do_deploy() {
 	# NOTE: If HAB is activated, IMX_BOOT_FILE is already extended by the machine configuration with .signed.
 	ln -sf flash.bin.signed ${DEPLOYDIR}/${IMX_BOOT_FILE}
 
-	install -m 0644 ${B}/hab/signed/boot-scr/boot.scr.signed ${DEPLOYDIR}
+	install -m 0644 ${B}/hab/signed/boot-scr/boot*.scr.signed ${DEPLOYDIR}
 }
 addtask deploy after do_compile
 
