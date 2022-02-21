@@ -3,6 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx_2020.04:"
 DEPENDS_append += "u-boot-tools-native"
 
 SRC_URI_append += " \
+	file://rtl8211e_backport.patch \
 	file://1001-devicetree-Skip-devicetree-building-when-EXT_DTB-is-.patch \
 	file://1002-clk-composite-Fix-memory-collision-issues.patch \
 	file://1003-compulab-imx8mm-Add-Hilscher-enviroments.patch \

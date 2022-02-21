@@ -1,6 +1,7 @@
 FILESEXTRAPATHS_prepend := "${TOPDIR}/../meta-bsp-imx8mm/recipes-kernel/linux/compulab/imx8mm:"
 
 require recipes-kernel/linux/compulab/imx8mm.inc
+SRC_URI_append += "file://rtl8122e_backport.patch"
 
 do_configure_append () {
     mkdir ${S}/firmware/brcm -p
