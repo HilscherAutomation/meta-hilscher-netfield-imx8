@@ -27,7 +27,4 @@ platform_init_run() {
 	for led in cloud_red cloud_green edge_green edge_yellow apl_green apl_red; do
 		ln -s /sys/class/leds/${led}/brightness /var/platform/led_${led}
 	done
-
-	# Exclude non-usable devices (e.g. eMMC when using SD and vice versa
-	lvm_exclude
 }
