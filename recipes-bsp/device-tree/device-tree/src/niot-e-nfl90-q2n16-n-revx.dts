@@ -128,11 +128,6 @@
 		gpio = <&gpio2 10 GPIO_ACTIVE_HIGH>; // SOM internal
 	};
 
-	reg_usdhc2_vmmc: regulator-usdhc2 {
-		status = "disabled";
-		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>; // SD2_nRST
-	};
-
 	regulator-usdhc3rst {
 		status = "okay";
 		gpio = <&gpio3 16 GPIO_ACTIVE_HIGH>; // SOM internal
@@ -218,12 +213,6 @@
 			fsl,pins = <
 				MX8MM_IOMUXC_I2C3_SDA_GPIO5_IO19   (PD|IS)    // IN1
 				MX8MM_IOMUXC_I2C4_SDA_GPIO5_IO21   (PD|DSEx1) // OUT0
-			>;
-		};
-
-		pinctrl_usdhc2_gpio: usdhc2grpgpio {
-			fsl,pins = <
-				MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12   (IS) // an external pulldown exists
 			>;
 		};
 
@@ -444,12 +433,6 @@
 	status = "okay";
 };
 
-&usdhc2 { /* SD-Card */
-	status = "okay";
-	/delete-property/ wp-gpios;
-	/delete-property/ vmmc-supply;
-};
-
 &usdhc3 { /* SOM: MMC */
 	status = "okay";
 };
@@ -536,4 +519,82 @@
 
 &vpu_h1 {
 	status = "disabled";
+};
+
+&usdhc2 {
+	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
+	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
+	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
+	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
+	//wp-gpios = <&gpio2 20 GPIO_ACTIVE_HIGH>;
+	no-1-8-v;
+	bus-width = <4>;
+	//vmmc-supply = <&reg_usdhc2_vmmc>;
+	status = "okay";
+};
+
+
+/ {
+	reg_usdhc2_vmmc: regulator-usdhc2 {
+		compatible = "regulator-fixed";
+		regulator-name = "VSD_3V3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		startup-delay-us = <100>;
+		off-on-delay-us = <12000>;
+	};
+};
+
+&iomuxc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_hog_1>;
+
+	ucm-imx8m-mini {
+		pinctrl_usdhc2_gpio: usdhc2grpgpio {
+			fsl,pins = <
+				//MX8MM_IOMUXC_SD2_RESET_B_GPIO2_IO19     0x41
+				MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12          (IS) // an external pulldown exists (orig: 0x41)
+				//MX8MM_IOMUXC_SD2_WP_GPIO2_IO20          0x00
+			>;
+		};
+
+		pinctrl_usdhc2: usdhc2grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK         0x190
+				MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD         0x1d0
+				MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0     0x1d0
+				MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1     0x1d0
+				MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2     0x1d0
+				MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3     0x1d0
+				MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT  0x1d0
+			>;
+		};
+
+		pinctrl_usdhc2_100mhz: usdhc2grp100mhz {
+			fsl,pins = <
+				MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK         0x194
+				MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD         0x1d4
+				MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0     0x1d4
+				MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1     0x1d4
+				MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2     0x1d4
+				MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3     0x1d4
+				MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT  0x1d0
+			>;
+		};
+
+		pinctrl_usdhc2_200mhz: usdhc2grp200mhz {
+			fsl,pins = <
+				MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK         0x196
+				MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD         0x1d6
+				MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0     0x1d6
+				MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1     0x1d6
+				MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2     0x1d6
+				MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3     0x1d6
+				MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT  0x1d0
+			>;
+		};
+	};
 };
