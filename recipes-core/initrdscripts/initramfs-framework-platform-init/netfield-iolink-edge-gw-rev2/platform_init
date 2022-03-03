@@ -31,7 +31,4 @@ platform_init_run() {
 	for led in cloud_red cloud_green; do
 		ln -s /sys/class/leds/${led} /var/platform/led_${led}
 	done
-
-	# Exclude non-usable devices (e.g. eMMC when using SD and vice versa
-	lvm_exclude
 }

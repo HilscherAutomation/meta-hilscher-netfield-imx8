@@ -169,6 +169,19 @@
 				MX8MM_IOMUXC_UART4_RXD_GPIO5_IO28       0x0
 			>;
 		};
+
+		/* overwrite usdhc2grp setup by sb-iotgimx8.dts, sd-card access with previous setup fails with IO error */
+		pinctrl_usdhc2: usdhc2grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK         0x190
+				MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD         0x1d0
+				MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0     0x1d0
+				MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1     0x1d0
+				MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2     0x1d0
+				MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3     0x1d0
+				MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT  0x1d0
+			>;
+		};
 	};
 };
 
