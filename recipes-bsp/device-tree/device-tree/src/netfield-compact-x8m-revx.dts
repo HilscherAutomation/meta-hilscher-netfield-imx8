@@ -249,6 +249,9 @@
 		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&clk IMX8MM_CLK_UART1_ROOT>, <&clk IMX8MM_CLK_UART1_ROOT>;
 		clock-names = "ipg", "per";
+		assigned-clocks = <&clk IMX8MM_CLK_UART1>;
+		assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+
 		dmas = <&sdma1 22 4 0>, <&sdma1 23 4 0>;
 		dma-names = "rx", "tx";
 
