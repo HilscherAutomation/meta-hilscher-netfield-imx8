@@ -170,5 +170,8 @@ do_deploy_append() {
         install -m 0644 ${B}/$file.scr ${DEPLOYDIR}
     done
 
-    ln -sf flash.bin ${DEPLOYDIR}/${IMX_BOOT_FILE}
+    # in case "hab" (secure boot) is enabled, meta-hab will create the correct link to the signed bootloader image
+    if [ "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'true', 'false',d)}" = "false" ]; then
+        ln -sf flash.bin ${DEPLOYDIR}/${IMX_BOOT_FILE}
+    fi
 }
