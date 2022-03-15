@@ -13,8 +13,13 @@
 		};
 	};
 	fragment@1 {
-		target = <&uart1_rs232>;
+		target = <&uart1_switchable>;
 		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_uart1_rs232 &pinctrl_uart1_gpio>;
+
+			fsl,uart-has-rtsct;
+
 			status = "okay";
 		};
 	};

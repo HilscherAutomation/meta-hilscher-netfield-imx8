@@ -11,7 +11,7 @@
 		i2c1 = &i2c2;
 		i2c2 = &i2c3;
 		i2c3 = &i2c4;
-		serial0 = &uart1;
+		serial0 = &uart1_switchable;
 		serial1 = &uart2;
 		serial2 = &uart3;
 		serial3 = &uart4;
@@ -216,14 +216,6 @@
 //   This enables the uart1 mode selection (RS485/RS232) by device-tree overlays.
 
 / {
-	aliases {
-		/delete-property/ serial0; // NOTE: Replaced by serial[4,5]
-		serial4 = &uart1_rs485;
-		serial5 = &uart1_rs232;
-	};
-};
-
-/ {
 	/delete-node/ regulator-uart1-mode;
 
 	regulator_uart1_mode_rs485: regulator-uart1-mode-rs485 {
@@ -251,41 +243,17 @@
 &aips3 {
 	/delete-node/ serial@30860000;
 
-	uart1_rs485: serial-rs485@30860000 {
+	uart1_switchable: serial@30860000 {
 		compatible = "fsl,imx8mm-uart", "fsl,imx6q-uart";
 		reg = <0x30860000 0x10000>;
 		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&clk IMX8MM_CLK_UART1_ROOT>, <&clk IMX8MM_CLK_UART1_ROOT>;
 		clock-names = "ipg", "per";
-		dmas = <&sdma1 22 4 0>, <&sdma1 23 4 0>;
-		dma-names = "rx", "tx";
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_uart1_rs485 &pinctrl_uart1_gpio>;
 		assigned-clocks = <&clk IMX8MM_CLK_UART1>;
 		assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
 
-		linux,rs485-enabled-at-boot-time;
-		rs485-rts-active-high;
-		rts-gpios = <&gpio4 24 GPIO_ACTIVE_LOW>;
-
-		status = "disabled";
-	};
-	uart1_rs232: serial-rs232@30860000 {
-		compatible = "fsl,imx8mm-uart", "fsl,imx6q-uart";
-		reg = <0x30860000 0x10000>;
-		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&clk IMX8MM_CLK_UART1_ROOT>, <&clk IMX8MM_CLK_UART1_ROOT>;
-		clock-names = "ipg", "per";
 		dmas = <&sdma1 22 4 0>, <&sdma1 23 4 0>;
 		dma-names = "rx", "tx";
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_uart1_rs232 &pinctrl_uart1_gpio>;
-		assigned-clocks = <&clk IMX8MM_CLK_UART1>;
-		assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
-
-		fsl,uart-has-rtsct;
 
 		status = "disabled";
 	};
