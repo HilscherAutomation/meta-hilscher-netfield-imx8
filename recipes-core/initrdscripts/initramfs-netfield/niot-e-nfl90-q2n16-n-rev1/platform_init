@@ -18,7 +18,7 @@ platform_init_run() {
 	mkdir -p /var/platform
 	mount -t tmpfs tmpfs /var/platform
 
-	echo "Exporting the platform gpios ..."
+	__debug "Exporting the platform gpios ..."
 	create_gpio 0 11 "in"  "pgood_3v3"
 	create_gpio 0 6  "in"  "pgood_5v0"
 	create_gpio 0 8  "in"  "tpm_irq#"
@@ -31,7 +31,7 @@ platform_init_run() {
 	create_gpio 4 19 "in"  "in_in1"
 	create_gpio 4 21 "out" "out_out0"
 
-	echo "Exporting the platform leds ..."
+	__debug "Exporting the platform leds ..."
 	ln -s /sys/class/leds/act_green/brightness  /var/platform/led_act_green
 	ln -s /sys/class/leds/act_red/brightness  /var/platform/led_act_red
 	ln -s /sys/class/leds/apl_green/brightness  /var/platform/led_apl_green
