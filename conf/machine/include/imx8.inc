@@ -114,9 +114,8 @@ IMAGE_BOOT_FILES += "boot-script-fit/boot-menu${SCRIPT_SUFFIX};boot.scr"
 WKS_FILE = "hilscher-gpt-boot-rescue-system-lvm.wks.in"
 
 WIC_BOOT_PART_CONTENT ??= "${IMAGE_BOOT_FILES}"
-WIC_RESCUE_PART_CONTENT ??= "${HILSCHER_RESCUE_IMAGE_LINK_NAME}.squashfs-xz;${HILSCHER_RESCUE_IMAGE}-${MACHINE}-${IMAGE_VERSION_SUFFIX}.squashfs \
-                             rboot.cfg fitImage initrd-api-part-cfg;initrd-api"
-WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage"
+WIC_RESCUE_PART_CONTENT ??= ""
+WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage initrd-api-part-cfg"
 
 #############################################################################
 # SWU images
