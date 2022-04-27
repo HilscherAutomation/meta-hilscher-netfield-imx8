@@ -1,0 +1,13 @@
+This fix was backported from https://github.com/compulab-yokneam/meta-bsp-imx8mm/commit/f5f3bda8532dfa11ba166ae534f37996d7a18ca5
+
+diff -aurN a/arch/arm64/boot/dts/compulab/ucm-imx8m-mini.dts b/arch/arm64/boot/dts/compulab/ucm-imx8m-mini.dts
+--- a/arch/arm64/boot/dts/compulab/ucm-imx8m-mini.dts	2022-02-21 09:03:29.741523611 +0100
++++ b/arch/arm64/boot/dts/compulab/ucm-imx8m-mini.dts	2022-02-21 09:04:37.755230283 +0100
+@@ -66,6 +66,7 @@
+ 		regulator-always-on;
+ 		enable-active-high;
+ 		startup-delay-us = <500>;
++		regulator-boot-on;
+ 	};
+ };
+ 
