@@ -15,9 +15,6 @@ create_gpio() {
 }
 
 platform_init_run() {
-	mkdir -p /var/platform
-	mount -t tmpfs tmpfs /var/platform
-
 	__debug "Exporting the platform gpios ..."
 	create_gpio 0 11 "in"  "pgood_3v3"
 	create_gpio 0 6  "in"  "pgood_5v0"

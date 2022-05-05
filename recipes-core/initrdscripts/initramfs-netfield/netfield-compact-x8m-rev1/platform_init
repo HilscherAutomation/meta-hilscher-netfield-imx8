@@ -99,9 +99,6 @@ detect_plugged_modules() {
 }
 
 platform_init_run() {
-	mkdir -p /var/platform
-	mount -t tmpfs tmpfs /var/platform
-
 	# Allow loading dtb overlays
 	mount -t configfs none /sys/kernel/config
 
