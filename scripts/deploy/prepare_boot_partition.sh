@@ -12,13 +12,8 @@ if [ "${image_type}" == "update" ]; then
 	echo "Installing ${DEPLOY_DIR_IMAGE}/boot-update.scr in boot partition ..."
 	cp ${DEPLOY_DIR_IMAGE}/boot-update.scr ./boot.scr
 elif [ "${image_type}" == "recovery" ]; then
-	echo "Installing ${DEPLOY_DIR_IMAGE}/boot-recovery.scr in boot partition ..."
-	# FIXME: how to determine which is the correct script
-	if [ -e "${DEPLOY_DIR_IMAGE}/boot-recovery.scr.signed" ]; then
-		cp ${DEPLOY_DIR_IMAGE}/boot-recovery.scr.signed ./boot.scr
-	else
-		cp ${DEPLOY_DIR_IMAGE}/boot-recovery.scr ./boot.scr
-	fi
+	echo "Installing ${DEPLOY_DIR_IMAGE}/boot-script-fit/boot-recovery.scr in boot partition ..."
+	cp ${DEPLOY_DIR_IMAGE}/boot-script-fit/boot-recovery.scr ./boot.scr
 elif [ "${image_type}" == "production" ]; then
 	echo "Installing ${DEPLOY_DIR_IMAGE}/boot-production.scr in boot partition ..."
 	cp ${DEPLOY_DIR_IMAGE}/boot-production.scr ./boot.scr

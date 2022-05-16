@@ -41,7 +41,6 @@
 	};
 
 	config {
-// 		u-boot,system-status-led = "sys_rdy_yellow";
 		u-boot,led-test-duration = <1000>;
 	};
 

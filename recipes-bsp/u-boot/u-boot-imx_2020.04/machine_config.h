@@ -1,134 +1,87 @@
-#define CONFIG_LOADADDR 0x50000000 //0x40480000
-#define CONFIG_SYS_LOAD_ADDR CONFIG_LOADADDR
+/* config of hilscher-ucm-imx8m-mini */
 
-#define CONFIG_SYS_BOOTM_LEN 0x2000000
-
-/* GigaBit link requires longer autonegotiation */
-#define PHY_ANEG_TIMEOUT 10000
-
-#define CONFIG_BOOTP_ID_CACHE_SIZE 10
-
-/* Initial environment variables */
-#define HILSCHER_CONFIG_EXTRA_ENV_SETTINGS \
-	"loadbootscript="MMC_LOAD_BOOT_SCRIPT"\0" \
-	"bootscript="RUN_BOOT_SCRIPT"\0" \
-	"loadimage="LOAD_IMAGE"\0" \
-	"fastboot="FASTBOOT_SCRIPT"\0" \
-	"netboot="NETBOOT_SCRIPT"\0" \
-	"autoload=yes\0" \
-	"initrd_high=0x50000000\0" \
-	"fdt_high=0x48000000\0" \
-	"pxe_setup="PXEBOOT_SETUP"\0" \
-	"bootcmd_pxe="PXEBOOT_COMMAND"\0" \
-	"netcon_ip=192.168.253.1\0" \
-	"netcon_cl=192.168.253.2\0" \
-	"netcon_up="NETCON_ENABLE"\0" \
-	"netcon_down="SERIALCON_ENABLE"\0" \
-	"menu_last_cmd=setenv bootdelay 15; run netcon_up;\0" \
-	"menum=2\0" \
-	USBBOOT_COMMAND \
-	"set_default_led= \0" \
-	"hab_stat="GET_HAB_STATUS"\0" \
-
-#define CONFIG_BOOTCOMMAND BOOTCOMMAND_SCRIPT
-#define BOOTCOMMAND_SCRIPT \
-	"run hab_stat; " \
-	"run set_default_led; " \
-	"run bootcmd_usb0; " \
-	"if test \"${boot_mode}\" = \"1\"; then " \
-		"run fastboot; " \
-	"fi; " \
-	"mmc dev ${mmcdev}; " \
-	"if mmc rescan; then " \
-		"if run loadbootscript; then " \
-			"run bootscript; " \
-		"else " \
-			"if run loadimage; then " \
-				"run mmcboot; " \
-			"fi; " \
-		"fi; " \
-	"else " \
-		"booti ${loadaddr} - ${fdt_addr}; " \
-	"fi; " \
-	"while true; do " \
-		"run pxe_setup; " \
-		"run bootcmd_pxe; " \
-	"done; " \
-
-#if defined(CONFIG_IMX_HAB)
-	#define GET_HAB_STATUS "hab_status"
-	/* security is enabled, so first verify (if fuses are setup) and then start image */
-	#define START_IMAGE "setexpr entrypoint ${loadaddr} + 20 && setenv ivt_off 0 && hab_auth_img ${loadaddr} ${filesize} ${ivt_off} && source ${entrypoint}"
-#else
-	#define GET_HAB_STATUS " "
-	#define START_IMAGE "source ${loadaddr}"
+/* default is 4 which lead to connection trouble (dhcp/bootp) in some network setups */
+#ifdef CONFIG_BOOTP_ID_CACHE_SIZE
+	#undef CONFIG_BOOTP_ID_CACHE_SIZE
+	#define CONFIG_BOOTP_ID_CACHE_SIZE 10
 #endif
 
-#define MMC_LOAD_BOOT_SCRIPT \
-	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script} && "START_IMAGE";"
+#ifdef CONFIG_LOADADDR
+	#undef CONFIG_LOADADDR
+	#define CONFIG_LOADADDR      0x50000000
+#endif
 
-#define USB_LOAD_BOOT_SCRIPT \
-	"load usb ${0}:${part} ${loadaddr} ${script} && "START_IMAGE";"
+#ifdef CONFIG_SYS_LOAD_ADDR
+	#undef CONFIG_SYS_LOAD_ADDR
+	#define CONFIG_SYS_LOAD_ADDR CONFIG_LOADADDR
+#endif
 
-#define RUN_BOOT_SCRIPT \
-	"echo Running bootscript from mmc ...; source;" \
+#ifdef PHY_ANEG_TIMEOUT
+	#undef PHY_ANEG_TIMEOUT
+	/* GigaBit link requires longer autonegotiation */
+	#define PHY_ANEG_TIMEOUT 10000
+#endif
 
-#define LOAD_IMAGE \
-	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image};" \
+#ifdef INITRD_HIGH
+	#undef INITRD_HIGH
+#endif
+#define INITRD_HIGH "0x50000000"
 
-#define FASTBOOT_SIMPLE \
-	"while true; do setenv ipaddr 192.168.253.1; fastboot udp; done;" \
+#ifdef FDT_HIGH
+	#undef FDT_HIGH
+#endif
+#define FDT_HIGH "0x48000000"
 
-#define FASTBOOT_SCRIPT \
-	"echo IP: 192.168.253.1;" \
-	"echo Disabling netCONSOLE...;" \
-	"run netcon_down;" \
-	"sleep 2;" \
-	"while true; do setenv ipaddr 192.168.253.1; fastboot udp; done;" \
+#if defined(CONFIG_IMX_HAB)
+	#define PLATFORM_INIT "hab_status"
+#else
+	#define PLATFORM_INIT " "
+#endif
 
-#define NETBOOT_SCRIPT \
-	"netboot=echo Booting from net ...; " \
-	"run netargs;  " \
-	"if test ${ip_dyn} = yes; then " \
-		"setenv get_cmd dhcp; " \
-	"else " \
-		"setenv get_cmd tftp; " \
-	"fi; " \
-	"${get_cmd} ${loadaddr} ${image}; " \
-	"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-		"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
-			"booti ${loadaddr} - ${fdt_addr}; " \
-		"else " \
-			"echo WARN: Cannot load the DT; " \
-		"fi; " \
-	"else " \
-		"booti; " \
-	"fi; " \
+/* In case the device does not provide a HID support we offer the menu control via GPIO and a led as feed back. */
+#if defined(CONFIG_BOOTMENU_GPIO)
+	/* devices with no HI like keyboard may use a gpio for example for boot menu validation */
+	#define BOARD_CONFIG_EXTRA_ENV_SETTINGS \
+		"mmcdev=1\0" \
+		"menu_gpio="CONFIG_BOOTMENU_GPIO_CTRL"\0" \
+		"led_gpio="CONFIG_BOOTMENU_GPIO_LED"\0" \
+		"get_menu="GET_MENU_VAL"\0"
 
-#define PXEBOOT_SETUP \
-	"setenv kernel_addr_r ${loadaddr};setenv ramdisk_addr_r ${loadaddr};setenv fdt_addr ${loadaddr};setenv pxefile_addr_r ${loadaddr};setenv bootargs console=$console provisioning=1;" \
-
-#define PXEBOOT_COMMAND \
-	"dhcp; " \
-	"if test $? = 0; then " \
-		"pxe boot; " \
-	"fi; " \
-
-#define SERIALCON_ENABLE \
-	"setenv stdout serial; setenv stdin serial;" \
-
-#define NETCON_ENABLE \
-	"setenv ipaddr $netcon_ip;setenv ncip $netcon_cl;setenv stdout nc; setenv stdin nc;" \
-
-#define USBBOOT_COMMAND  \
-	"usb_parts=1\0"                                                                                  \
-	"bootcmd_usb0="                                                                                  \
-		"if usb reset && usb dev; then "                                                         \
-			"for part in ${usb_parts}; do "                                                  \
-				"if test -e usb 0:${part} ${script}; then "                              \
-					"echo Found U-Boot script ${script}; "                           \
-					USB_LOAD_BOOT_SCRIPT                                             \
-					"echo SCRIPT FAILED: continuing...; "                            \
-				"fi; "                                                                   \
-			"done; "                                                                         \
-		"fi;\0"
+	#define GET_MENU_VAL \
+		"gpio input $menu_gpio; " \
+		"if test $? -eq 0; then " \
+			"gpio input $led_gpio; " \
+			"setenv led_stat $?; " \
+			"gpio set $led_gpio; " \
+			"setenv menu_active 1; " \
+			"setenv boot_menu 0; " \
+			"while test $menu_active = 1; do " \
+				"setenv menu_active 0; " \
+				"sleep 2; " \
+				"gpio input $menu_gpio; " \
+				"if test $? -eq 0; then " \
+					"setexpr boot_menu $boot_menu + 1; " \
+					"if test $boot_menu -lt $boot_menu_max; then " \
+						"setenv menu_active 1; " \
+					"fi; " \
+					"setenv blink $boot_menu; " \
+					"echo menu-counter: $blink; " \
+					"while test $blink -gt 0; do " \
+						"gpio toogle $led_gpio; " \
+						"sleep 1; " \
+						"gpio toogle $led_gpio; " \
+						"sleep 1; " \
+						"setexpr blink $blink - 1; " \
+					"done; " \
+				"fi; " \
+			"done; " \
+			"gpio input $led_gpio; " \
+			"if test $led_stat != $?; then " \
+				"gpio toogle $led_gpio; " \
+			"fi; " \
+		"fi;"
+#else
+	/* definition not necesarry since control is done via keyboard, screen, serial... */
+	#define BOARD_CONFIG_EXTRA_ENV_SETTINGS \
+		"get_menu= \0"
+#endif

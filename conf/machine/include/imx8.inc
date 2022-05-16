@@ -103,7 +103,10 @@ KERNEL_IMAGETYPES_append += "fitImage"
 # Contents of boot partition (excluding rootfs)
 #############################################################################
 IMAGE_BOOT_FILES  = "${IMX_BOOT_FILE};boot.bin"
-IMAGE_BOOT_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.signed;boot.scr', 'boot.scr', d)}"
+
+# depending on the image settings choose the correct boot script
+SCRIPT_SUFFIX = "${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '-debug.scr', "-fastboot.scr" ,d)}"
+IMAGE_BOOT_FILES += "boot-script-fit/boot-menu${SCRIPT_SUFFIX};boot.scr"
 
 #############################################################################
 # WIC images

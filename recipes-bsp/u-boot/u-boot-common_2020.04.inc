@@ -2,6 +2,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx_2020.04:"
 
 DEPENDS_append += "u-boot-tools-native"
 
+require recipes-bsp/u-boot/u-boot-netfield.inc
+
 SRC_URI_append += " \
 	file://rtl8211e_backport.patch \
 	file://1001-devicetree-Skip-devicetree-building-when-EXT_DTB-is-.patch \
@@ -9,8 +11,7 @@ SRC_URI_append += " \
 	file://1003-compulab-imx8mm-Add-Hilscher-enviroments.patch \
 	file://1004-compulab-imx8mm-Dependent-to-EEprom-layout-up-to-4-M.patch \
 	file://1005-compulab-imx8mm-Add-LED-support-as-defined-in-the-fo.patch \
-	file://1006-Add-support-for-pin-controlled-boot-menu.patch \
-	file://1007-Add-support-of-setting-led-default-state-when-leavin.patch \
+	file://1006-fix_fastboot_parameter_setup.patch \
 	file://1008-fix_phy_initialization.patch \
 	file://1009-atheros.c-Fix-the-vddio-1p8v-and-smartEEE-quirk-of-A.patch \
 	file://1011-drivers-net-phy-Add-devicetree-support-for-the-max-s.patch \
@@ -21,16 +22,12 @@ SRC_URI_append += " \
 	file://fat_show_files_without_arch_attr.patch \
 	file://machine_config.h \
 	file://defconfig \
-	${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '', 'file://keyed_boot.cfg' ,d)} \
-"
+	file://0001-Changed-config-file-from-machine-to-distro-specific-.patch \
+	file://add_gpio_controlled_boot_menu.patch \
+	${@bb.utils.contains('MACHINE_FEATURES', 'u-boot-gpio-menu', 'file://gpio-menu.cfg', '' ,d)} \
+	"
 
 SRC_URI_append_netfield-iolink-edge-gw-revx += "file://netfield-iolink-edge-gw-revx.cfg"
-
-BOOT_SCRIPTS = "boot boot-recovery"
-SRC_URI_append += " \
-	file://boot.cmd \
-	file://boot-recovery.cmd \
-"
 
 export_devicetree_settings() {
 	[ "$1" = "-v" ] && verbose=1
@@ -79,7 +76,7 @@ export_devicetree_settings() {
 
 do_configure[depends] += "virtual/dtb:do_populate_sysroot"
 do_configure_prepend() {
-	cat ${WORKDIR}/machine_config.h > ${S}/include/configs/hilscher-ucm-imx8m-mini.h
+	cp ${WORKDIR}/machine_config.h       ${S}/include/configs/
 
 	export_devicetree_settings -v
 
@@ -110,15 +107,6 @@ do_configure_prepend() {
 		else
 			mkdir -p ${B}/arch/arm/dts
 			ln -sf ${EXT_DTB} ${B}/arch/arm/dts/$(basename ${EXT_DTB})
-		fi
-	fi
-	if [ "${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', 'true', 'false',d)}" = "false" ]; then
-		# Add password for u-boot shell
-		if [ -z "${UBOOT_PW}" ]; then
-			bbfatal "Please define a UBOOT_PW for this machine"
-		else
-			sha256_pw=$(echo ${UBOOT_PW} | sha256sum | cut -d " " -f 1)
-			sed -i -e 's,.*\(CONFIG_AUTOBOOT_STOP_STR_SHA256\).*,\1="'${sha256_pw}'",g' ${S}/configs/$config
 		fi
 	fi
 }
@@ -175,17 +163,7 @@ do_compile_prepend_mx8mm() {
 	export TEE_LOAD_ADDR=0x7e000000
 }
 
-do_compile_append() {
-    for file in ${BOOT_SCRIPTS}; do
-        mkimage -A arm64 -T script -C none -n "Boot script" -d ${WORKDIR}/$file.cmd $file.scr
-    done
-}
-
 do_deploy_append() {
-    for file in ${BOOT_SCRIPTS}; do
-        install -m 0644 ${B}/$file.scr ${DEPLOYDIR}
-    done
-
     # in case "hab" (secure boot) is enabled, meta-hab will create the correct link to the signed bootloader image
     if [ "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'true', 'false',d)}" = "false" ]; then
         ln -sf flash.bin ${DEPLOYDIR}/${IMX_BOOT_FILE}

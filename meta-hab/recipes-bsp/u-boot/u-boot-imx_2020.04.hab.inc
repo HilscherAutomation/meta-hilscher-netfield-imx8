@@ -3,7 +3,6 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx_2020.04:"
 
 SRC_URI_append += " \
 	file://enable_hab.cfg \
-	file://enable_fit_signature.cfg \
 	file://0001-bootm-Disable-HAB-verification-for-fitImages.patch \
 	file://0002-rsa-Selecting-RSA_SOFTWARE_EXP-by-default-when-RSA_F.patch \
 	file://0003-Fix-HAB-issues-when-using-AUTOBOOT_STO_STR_SHA256.patch \

@@ -4,12 +4,6 @@
 
 / {
 	model = "netfield-iolink-edge-gw-rev2";
-
-	config {
-		u-boot,recovery-gpio = <&gpio1 6 GPIO_ACTIVE_LOW>;
-		u-boot,system-status-led = "cloud_red";
-		u-boot,led-test-duration = <1000>;
-	};
 };
 
 &device_leds {
@@ -41,6 +35,14 @@
 		"N/C", "PGOOD_3V3", "N/C", "TPM_GPIO", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
 		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
 		"N/C", "N/C";
+
+	/* setup gpios for menu control */
+	u-boot-ctrl-gpios {
+		gpio-hog;
+		gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
+		input;
+		line-name = "menu-ctrl-gpios";
+	};
 };
 
 /* Bluetooth module has been removed since rev1 */
