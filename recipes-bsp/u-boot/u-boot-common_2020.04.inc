@@ -18,6 +18,7 @@ SRC_URI_append += " \
 	file://compulab-iotgate-imx8-add-hilscher-env.patch \
 	file://compulab-iotgate-imx8-disable-module-detection.patch \
 	file://pxe_add_bootargs_append_func.patch \
+	file://fat_show_files_without_arch_attr.patch \
 	file://machine_config.h \
 	file://defconfig \
 	${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '', 'file://keyed_boot.cfg' ,d)} \
