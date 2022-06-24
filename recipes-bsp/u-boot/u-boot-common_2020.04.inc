@@ -169,3 +169,14 @@ do_deploy_append() {
         ln -sf flash.bin ${DEPLOYDIR}/${IMX_BOOT_FILE}
     fi
 }
+
+inherit hilscher-deploy
+
+hd_path = "${HDEPLOY_PATH_EXTRAS}/bootloader"
+
+do_hilscher_deploy() {
+	cd ${DEPLOYDIR}
+	cp -a $(readlink flash.bin) ${hd_path}/
+}
+do_hilscher_deploy[cleandirs] = "${hd_path}/"
+addtask hilscher_deploy before do_build after do_deploy
