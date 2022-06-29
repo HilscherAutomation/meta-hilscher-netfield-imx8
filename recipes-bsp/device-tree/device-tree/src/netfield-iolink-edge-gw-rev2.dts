@@ -39,7 +39,7 @@
 	/* setup gpios for menu control */
 	u-boot-ctrl-gpios {
 		gpio-hog;
-		gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
+		gpios = <6 GPIO_ACTIVE_LOW>;
 		input;
 		line-name = "menu-ctrl-gpios";
 	};
