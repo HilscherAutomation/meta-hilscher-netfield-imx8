@@ -39,9 +39,6 @@ BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deplo
 
 SERIAL_CONSOLES = "115200;ttymxc2"
 
-# Don't build USB images (.zip) and recovery SWU
-NETFIELD_IMAGES = ""
-
 MACHINE_FEATURES += "bluetooth optee tpm2"
 MACHINE_SOCARCH_FILTER_append_mx8mm = "virtual/libopenvg virtual/libgles1 virtual/libgles2 virtual/egl virtual/mesa virtual/libgl virtual/libg2d"
 MACHINE_FIRMWARE += "linux-firmware-bcm4339 linux-firmware-imx-sdma-imx7d"
@@ -106,7 +103,7 @@ IMAGE_BOOT_FILES  = "${IMX_BOOT_FILE};boot.bin"
 
 # depending on the image settings choose the correct boot script
 SCRIPT_SUFFIX = "${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '-debug.scr', "-fastboot.scr" ,d)}"
-IMAGE_BOOT_FILES += "boot-script-fit/boot-menu${SCRIPT_SUFFIX};boot.scr"
+IMAGE_BOOT_FILES += "boot-script-fit/fitImage-boot-menu${SCRIPT_SUFFIX};boot-fit.scr"
 
 #############################################################################
 # WIC images

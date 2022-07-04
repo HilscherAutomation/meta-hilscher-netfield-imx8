@@ -57,8 +57,8 @@
 #define BASE_BOARD_CONFIG_EXTRA_ENV_SETTINGS \
 	"basebootargs=dummy - see platform_init\0" \
 	"plat_dev_if=mmc\0" \
-	"plat_dev=1\0" \
-	"plat_dev_linux=/dev/mmcblk1p\0" \
+	"plat_dev=0\0" \
+	"plat_dev_linux=/dev/mmcblk0p\0" \
 	"usb_dev_if=usb\0" \
 	"usb_dev=0\0" \
 	"get_menu= \0"
