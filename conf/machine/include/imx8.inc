@@ -39,9 +39,6 @@ BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deplo
 
 SERIAL_CONSOLES = "115200;ttymxc2"
 
-# Don't build USB images (.zip) and recovery SWU
-NETFIELD_IMAGES = ""
-
 MACHINE_FEATURES += "bluetooth optee tpm2"
 MACHINE_SOCARCH_FILTER_append_mx8mm = "virtual/libopenvg virtual/libgles1 virtual/libgles2 virtual/egl virtual/mesa virtual/libgl virtual/libg2d"
 MACHINE_FIRMWARE += "linux-firmware-bcm4339 linux-firmware-imx-sdma-imx7d"
