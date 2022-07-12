@@ -1,6 +1,7 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx_2020.04:"
 
 DEPENDS_append += "u-boot-tools-native"
+DEPENDS_append += "boot-script-fit"
 
 SRC_URI_append += " \
 	file://rtl8211e_backport.patch \
@@ -26,11 +27,12 @@ SRC_URI_append += " \
 
 SRC_URI_append_netfield-iolink-edge-gw-revx += "file://netfield-iolink-edge-gw-revx.cfg"
 
-BOOT_SCRIPTS = "boot boot-recovery"
+FILESEXTRAPATHS_prepend := "${THISDIR}/boot-script-fit:"
 SRC_URI_append += " \
 	file://boot.cmd \
 	file://boot-recovery.cmd \
 "
+BOOT_SCRIPTS = "boot boot-recovery"
 
 export_devicetree_settings() {
 	[ "$1" = "-v" ] && verbose=1
