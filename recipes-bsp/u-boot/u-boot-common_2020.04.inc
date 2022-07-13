@@ -24,6 +24,7 @@ SRC_URI_append += " \
 	file://defconfig \
 	file://0001-Changed-config-file-from-machine-to-distro-specific-.patch \
 	file://add_gpio_controlled_boot_menu.patch \
+	file://add_gpio-hog_scope.patch \
 	${@bb.utils.contains('MACHINE_FEATURES', 'u-boot-gpio-menu', 'file://gpio-menu.cfg', '' ,d)} \
 	"
 

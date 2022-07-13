@@ -36,12 +36,13 @@
 		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
 		"N/C", "N/C";
 
-	/* setup gpios for menu control */
-	u-boot-ctrl-gpios {
-		gpio-hog;
+	/* setup gpio for u-boot menu control */
+	u-boot-ctrl-gpio {
+		/* using "u-boot,gpio-hog" allows exporting under linux */
+		u-boot,gpio-hog;
 		gpios = <6 GPIO_ACTIVE_LOW>;
 		input;
-		line-name = "menu-ctrl-gpios";
+		line-name = "menu-ctrl-gpio";
 	};
 };
 
