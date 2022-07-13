@@ -172,8 +172,9 @@ do_compile_prepend() {
 }
 
 do_compile_prepend_mx8mm() {
-	# for imx8mm change the ATF load address
+	# for imx8mm change the ATF and TEE load address
 	export ATF_LOAD_ADDR=0x00920000
+	export TEE_LOAD_ADDR=0x7e000000
 }
 
 do_compile_append() {
