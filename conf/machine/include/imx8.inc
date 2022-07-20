@@ -39,9 +39,6 @@ BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deplo
 
 SERIAL_CONSOLES = "115200;ttymxc2"
 
-# Don't build USB images (.zip) and recovery SWU
-NETFIELD_IMAGES = ""
-
 MACHINE_FEATURES += "bluetooth optee tpm2"
 MACHINE_SOCARCH_FILTER_append_mx8mm = "virtual/libopenvg virtual/libgles1 virtual/libgles2 virtual/egl virtual/mesa virtual/libgl virtual/libg2d"
 MACHINE_FIRMWARE += "linux-firmware-bcm4339 linux-firmware-imx-sdma-imx7d"
@@ -103,7 +100,10 @@ KERNEL_IMAGETYPES_append += "fitImage"
 # Contents of boot partition (excluding rootfs)
 #############################################################################
 IMAGE_BOOT_FILES  = "${IMX_BOOT_FILE};boot.bin"
-IMAGE_BOOT_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.signed;boot.scr', 'boot.scr', d)}"
+
+# depending on the image settings choose the correct boot script
+SCRIPT_SUFFIX = "${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '-debug.scr', "-fastboot.scr" ,d)}"
+IMAGE_BOOT_FILES += "boot-script-fit/fitImage-boot-menu${SCRIPT_SUFFIX};boot-fit.scr"
 
 #############################################################################
 # WIC images
@@ -111,9 +111,8 @@ IMAGE_BOOT_FILES += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot.scr.s
 WKS_FILE = "hilscher-gpt-boot-rescue-system-lvm.wks.in"
 
 WIC_BOOT_PART_CONTENT ??= "${IMAGE_BOOT_FILES}"
-WIC_RESCUE_PART_CONTENT ??= "${HILSCHER_RESCUE_IMAGE_LINK_NAME}.squashfs-xz;${HILSCHER_RESCUE_IMAGE}-${MACHINE}-${IMAGE_VERSION_SUFFIX}.squashfs \
-                             rboot.cfg fitImage initrd-api-part-cfg;initrd-api"
-WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage"
+WIC_RESCUE_PART_CONTENT ??= ""
+WIC_SYSTEM_PART_CONTENT ??= "${IMAGE_LINK_NAME}.squashfs boot.cfg fitImage initrd-api-part-cfg"
 
 #############################################################################
 # SWU images

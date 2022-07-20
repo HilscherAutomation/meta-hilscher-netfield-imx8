@@ -20,7 +20,7 @@ index 684a2d0888..69e3318cfc 100644
 +#define PHY_ANEG_TIMEOUT 10000
 +
  /* Initial environment variables */
- #define HILSCHER_CONFIG_EXTRA_ENV_SETTINGS \
+ #define NETIOT_CONFIG_EXTRA_ENV_SETTINGS \
  	"loadbootscript="LOAD_BOOT_SCRIPT"\0" \
 -- 
 2.17.1

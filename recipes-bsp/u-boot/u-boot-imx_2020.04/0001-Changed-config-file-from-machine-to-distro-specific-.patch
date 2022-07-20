@@ -1,0 +1,39 @@
+From 1a8b66a218e59903c4ecb337b4a01502ed3ec4db Mon Sep 17 00:00:00 2001
+From: Sebastian Doell <sdoell@hilscher.com>
+Date: Wed, 27 Apr 2022 07:31:36 +0000
+Subject: [PATCH] Changed config file frommachine to distro specific
+
+---
+ include/configs/iot-gate-imx8.h  | 2 +-
+ include/configs/ucm-imx8m-mini.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/configs/iot-gate-imx8.h b/include/configs/iot-gate-imx8.h
+index 1243a4bd27..4338fdb903 100644
+--- a/include/configs/iot-gate-imx8.h
++++ b/include/configs/iot-gate-imx8.h
+@@ -8,7 +8,7 @@
+ #define __UCM_IMX8M_MINI_H
+ 
+ #include "cpl-imx8m-mini.h"
+-#include "hilscher-ucm-imx8m-mini.h"
++#include "netiot_distro_config.h"
+ 
+ #if defined(CONFIG_ANDROID_SUPPORT)
+ #include "ucm-imx8m-mini_android.h"
+diff --git a/include/configs/ucm-imx8m-mini.h b/include/configs/ucm-imx8m-mini.h
+index 1243a4bd27..4338fdb903 100644
+--- a/include/configs/ucm-imx8m-mini.h
++++ b/include/configs/ucm-imx8m-mini.h
+@@ -8,7 +8,7 @@
+ #define __UCM_IMX8M_MINI_H
+ 
+ #include "cpl-imx8m-mini.h"
+-#include "hilscher-ucm-imx8m-mini.h"
++#include "netiot_distro_config.h"
+ 
+ #if defined(CONFIG_ANDROID_SUPPORT)
+ #include "ucm-imx8m-mini_android.h"
+-- 
+2.17.1
+

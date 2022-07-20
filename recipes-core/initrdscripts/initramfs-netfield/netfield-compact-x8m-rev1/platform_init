@@ -26,7 +26,7 @@ read_slot() {
 
 	if [ ! -e /sys/devices/platform/soc@0/soc@0:bus@30800000/30a50000.i2c/i2c-3/3-0022 ]; then
 		# This should never happen, but somehow pca device is not available
-		msg "Unable to find pca gpio expander, which should be available on this board"
+		__msg "Unable to find pca gpio expander, which should be available on this board"
 		echo 0
 		return
 	fi
@@ -51,24 +51,24 @@ detect_plugged_modules() {
 	for slot in 0 1; do
 		slotid=$(read_slot $slot)
 		case $slotid in
-			0) msg "Slot${slot}: unpopulated"
+			0) __msg "Slot${slot}: unpopulated"
 			    ;;
-			2) msg "Slot${slot}: RS485"
+			2) __msg "Slot${slot}: RS485"
 			   load_overlay "imx8gate-ied-slot${slot}-rs232"
 			   ;;
-			3) msg "Slot${slot}: TPM"
+			3) __msg "Slot${slot}: TPM"
 			   load_overlay "imx8gate-ied-slot${slot}-tpm"
 			   ;;
-			4) msg "Slot${slot}: CAN"
+			4) __msg "Slot${slot}: CAN"
 			   load_overlay "imx8gate-ied-slot${slot}-can"
 			   ;;
-			5) msg "Slot${slot}: CL420"
+			5) __msg "Slot${slot}: CL420"
 			   load_overlay "imx8gate-ied-slot${slot}-cl420"
 			   ;;
-			6) msg "Slot${slot}: RS232"
+			6) __msg "Slot${slot}: RS232"
 			   load_overlay "imx8gate-ied-slot${slot}-rs232"
 			   ;;
-			*) msg "Slot${slot}: UNKNOWN <$slotid>"
+			*) __msg "Slot${slot}: UNKNOWN <$slotid>"
 			   ;;
 		esac
 	done
@@ -76,9 +76,9 @@ detect_plugged_modules() {
 	# Slot 2
 	slotid=$(read_slot 2)
 	case $slotid in
-		0) msg "Slot2: unpopulated"
+		0) __msg "Slot2: unpopulated"
 		   ;;
-		1) msg "Slot2: DI4O4"
+		1) __msg "Slot2: DI4O4"
 		   # 64 is base of gpiochip2
 		   create_gpio $(( 64 + 0 )) "in" "ied-di4o4_i0"
 		   create_gpio $(( 64 + 1 )) "in" "ied-di4o4_i1"
@@ -93,15 +93,12 @@ detect_plugged_modules() {
 		   create_gpio $(( expander_base + 9 ))  "low" "ied-di4o4_o2"
 		   create_gpio $(( expander_base + 10 )) "low" "ied-di4o4_o3"
 		   ;;
-		*) msg "Slot2: UNKNOWN <$slotid>"
+		*) __msg "Slot2: UNKNOWN <$slotid>"
 		   ;;
 	esac
 }
 
 platform_init_run() {
-	mkdir -p /var/platform
-	mount -t tmpfs tmpfs /var/platform
-
 	# Allow loading dtb overlays
 	mount -t configfs none /sys/kernel/config
 
@@ -125,7 +122,7 @@ platform_init_run() {
 		fi
 	fi
 
-	msg "Detected extension module '$extension'"
+	__msg "Detected extension module '$extension'"
 
 	case $extension in
 		"empty")
@@ -141,7 +138,7 @@ platform_init_run() {
 		;;
 	esac
 
-	echo "Exporting the platform leds ..."
+	__debug "Exporting the platform leds ..."
 	for led in edge_green edge_yellow; do
 		ln -s /sys/class/leds/${led}/brightness /var/platform/led_${led}
 	done

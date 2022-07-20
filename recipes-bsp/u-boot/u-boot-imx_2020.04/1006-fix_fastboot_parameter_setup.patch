@@ -1,21 +1,8 @@
-From 26009de8e0cc4f44a62118067e57b829e2f930cf Mon Sep 17 00:00:00 2001
-From: Sebastian Doell <sdoell@hilscher.com>
-Date: Wed, 10 Mar 2021 12:55:21 +0000
-Subject: [PATCH] Add support for pin controlled boot menu.
-
----
- board/compulab/plat/imx8mm/board/board.c      |   7 +-
- .../compulab/plat/imx8mm/board/board_addon.c  | 113 ++++++++++++++++--
- cmd/bootmenu.c                                |  78 ++++++------
- drivers/fastboot/fb_mmc.c                     |  12 ++
- include/configs/hilscher-ucm-imx8m-mini.h     |  46 ++++++-
- 5 files changed, 210 insertions(+), 46 deletions(-)
-
 diff --git a/board/compulab/plat/imx8mm/board/board.c b/board/compulab/plat/imx8mm/board/board.c
-index 0caa4dc1b8..48520b0cfb 100644
+index e9ea89886f..b08252976d 100644
 --- a/board/compulab/plat/imx8mm/board/board.c
 +++ b/board/compulab/plat/imx8mm/board/board.c
-@@ -252,7 +252,12 @@ int board_mmc_get_env_dev(int devno)
+@@ -298,7 +298,12 @@ int board_mmc_get_env_dev(int devno)
  		printf("User Environment dev# is (%lu)\n", user_env_devno);
  		return (int)user_env_devno;
  	}
@@ -30,7 +17,7 @@ index 0caa4dc1b8..48520b0cfb 100644
  
  static int _mmc_get_env_part(void)
 diff --git a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
-index 088ae05479..b4b70a676a 100644
+index 088ae05479..5fed46af21 100644
 --- a/board/compulab/plat/imx8mm/board/board_addon.c
 +++ b/board/compulab/plat/imx8mm/board/board_addon.c
 @@ -6,9 +6,12 @@
@@ -64,7 +51,7 @@ index 088ae05479..b4b70a676a 100644
  		if (ret)
  			return ret;
  	}
-@@ -67,6 +70,102 @@ static int init_system_status_led(void)
+@@ -67,6 +70,41 @@ static int init_system_status_led(void)
  	return 0;
  }
  
@@ -82,67 +69,6 @@ index 088ae05479..b4b70a676a 100644
 +
 +#endif
 +
-+static int init_boot_mode(void)
-+{
-+	int config_offset;
-+	ofnode config_node;
-+	struct gpio_desc gpio;
-+	int cnt = 0;
-+	char buf[10];
-+	int ret;
-+	unsigned long menu_duration = 1;
-+	unsigned long menu_max = 10;
-+
-+	config_offset = fdt_path_offset(gd->fdt_blob, "/config");
-+	config_node = offset_to_ofnode(config_offset);
-+
-+	ret = gpio_request_by_name_nodev(config_node, "u-boot,recovery-gpio", 0, &gpio, 0);
-+	if (ret)
-+		return ret;
-+
-+	env_set("boot_mode", "0");
-+
-+	/* check validity of variables to make sure setup always allows control by user */
-+	menu_duration = env_get_ulong("menud", 10, 1);
-+	menu_duration = (menu_duration > 5) ? 5 : menu_duration;
-+	menu_max = env_get_ulong("menum", 10, 1);
-+	menu_max = (menu_max < 1) ? 1 : menu_max;
-+
-+	/* check if user triggers menu pin */
-+	while ( (dm_gpio_get_value(&gpio)) && (cnt < menu_max) ) {
-+		/* We need to disable the LED once at the beginning, since it might be on */
-+                /* already so add a delay as well, to be able to see first light signal.  */
-+		if (cnt == 0) {
-+			init_system_status_led(LEDST_OFF);
-+			mdelay(1000);
-+		}
-+		/* increase and store menu counter */
-+		cnt++;
-+		sprintf(buf, "%d", cnt);
-+
-+		/* signal menu step via led */
-+		env_set("boot_mode", buf);
-+		init_system_status_led(LEDST_ON);
-+		mdelay(100);
-+		init_system_status_led(LEDST_OFF);
-+
-+		/* wait x second(s) to make sure user has a chance to unset pin after signalling */
-+		mdelay(menu_duration*1000);
-+	}
-+	if (cnt >= menu_max) {
-+		/* The last menu entry is always console. Some devices do not provide serial     */
-+		/* console so we need to start netCONSOLE - this need to be done in a precommand */
-+                /* to be able to stop autoboot, because of the pw-protection.                    */
-+		init_system_status_led(LEDST_ON);
-+		if ( env_get("menu_last_cmd") != NULL ) {
-+			env_set("preboot", "run menu_last_cmd");
-+		}
-+	} else {
-+		led_default_state();
-+	}
-+	return 0;
-+}
-+
 +static void init_fastboot_variables()
 +{
 +	const char* model = NULL;
@@ -159,7 +85,7 @@ index 088ae05479..b4b70a676a 100644
 +	//env_set("fastboot.serialno", );
 +#if defined(CONFIG_FIT_SIGNATURE) && !defined(CONFIG_LEGACY_IMAGE_FORMAT)
 +	env_set("fastboot.secure", "yes");
-+else
++#else
 +	env_set("fastboot.secure", "no");
 +#endif
 +}
@@ -167,7 +93,7 @@ index 088ae05479..b4b70a676a 100644
  static int setup_mac_address_x(int x)
  {
  	int ret;
-@@ -94,11 +193,11 @@ int misc_init_r(void)
+@@ -94,11 +132,10 @@ int misc_init_r(void)
  {
  	int x, ret;
  
@@ -179,7 +105,6 @@ index 088ae05479..b4b70a676a 100644
 +	test_system_leds();
 +	led_default_state();
 +	init_system_status_led(LEDST_ON);
-+	init_boot_mode();
 +	init_fastboot_variables();
  
  	for (x=0; x<4; x++) {
@@ -363,92 +288,3 @@ index d7cf9f4aac..ccacd23432 100644
  #ifdef CONFIG_ANDROID_BOOT_IMAGE
  	if (strncasecmp(cmd, "zimage", 6) == 0) {
  		fb_mmc_update_zimage(dev_desc, download_buffer,
-diff --git a/include/configs/hilscher-ucm-imx8m-mini.h b/include/configs/hilscher-ucm-imx8m-mini.h
-index 8d0173de67..2c6d888807 100644
---- a/include/configs/hilscher-ucm-imx8m-mini.h
-+++ b/include/configs/hilscher-ucm-imx8m-mini.h
-@@ -8,12 +8,24 @@
- 	"loadbootscript="LOAD_BOOT_SCRIPT"\0" \
- 	"bootscript="RUN_BOOT_SCRIPT"\0" \
- 	"loadimage="LOAD_IMAGE"\0" \
-+	"fastboot="FASTBOOT_SCRIPT"\0" \
- 	"netboot="NETBOOT_SCRIPT"\0" \
- 	"initrd_high=0x50000000\0" \
- 	"fdt_high=0x48000000\0" \
-+	"pxe_setup="PXEBOOT_SETUP"\0" \
-+	"bootcmd_pxe="PXEBOOT_COMMAND"\0" \
-+	"netcon_ip=192.168.253.1\0" \
-+	"netcon_cl=192.168.253.2\0" \
-+	"netcon_up="NETCON_ENABLE"\0" \
-+	"netcon_down="SERIALCON_ENABLE"\0" \
-+	"menu_last_cmd=setenv bootdelay 15; run netcon_up;\0" \
-+	"menum=2\0" \
- 
- #define CONFIG_BOOTCOMMAND BOOTCOMMAND_SCRIPT
- #define BOOTCOMMAND_SCRIPT \
-+	"if test \"${boot_mode}\" = \"1\"; then " \
-+		"run fastboot; " \
-+	"fi; " \
- 	"mmc dev ${mmcdev}; " \
- 	"if mmc rescan; then " \
- 		"if run loadbootscript; then " \
-@@ -21,13 +33,15 @@
- 		"else " \
- 			"if run loadimage; then " \
- 				"run mmcboot; " \
--			"else " \
--				"run netboot; " \
- 			"fi; " \
- 		"fi; " \
- 	"else " \
- 		"booti ${loadaddr} - ${fdt_addr}; " \
- 	"fi; " \
-+	"while true; do " \
-+		"run pxe_setup; " \
-+		"run bootcmd_pxe; " \
-+	"done; " \
- 
- #define LOAD_BOOT_SCRIPT \
- 	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};" \
-@@ -37,7 +51,17 @@
- 
- #define LOAD_IMAGE \
- 	"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image};" \
--	
-+
-+#define FASTBOOT_SIMPLE \
-+	"while true; do setenv ipaddr 192.168.253.1; fastboot udp; done;" \
-+
-+#define FASTBOOT_SCRIPT \
-+	"echo IP: 192.168.253.1;" \
-+	"echo Disabling netCONSOLE...;" \
-+	"run netcon_down;" \
-+	"sleep 2;" \
-+	"while true; do setenv ipaddr 192.168.253.1; fastboot udp; done;" \
-+
- #define NETBOOT_SCRIPT \
- 	"netboot=echo Booting from net ...; " \
- 	"run netargs;  " \
-@@ -57,3 +81,19 @@
- 		"booti; " \
- 	"fi; " \
- 
-+#define PXEBOOT_SETUP \
-+	"setenv kernel_addr_r ${loadaddr};setenv ramdisk_addr_r ${loadaddr};setenv fdt_addr ${loadaddr};setenv pxefile_addr_r 0x70000000;setenv bootargs console=$console provisioning=1;" \
-+
-+#define PXEBOOT_COMMAND \
-+	"dhcp; " \
-+	"if test $? = 0; then " \
-+		"if pxe get; then " \
-+			"pxe boot; " \
-+		"fi; " \
-+	"fi; " \
-+
-+#define SERIALCON_ENABLE \
-+	"setenv stdout serial; setenv stdin serial;" \
-+
-+#define NETCON_ENABLE \
-+	"setenv ipaddr $netcon_ip;setenv ncip $netcon_cl;setenv stdout nc; setenv stdin nc;" \
--- 
-2.17.1
-
