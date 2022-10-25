@@ -1,4 +1,4 @@
 COMPATIBLE_HOST = "aarch64-.*-linux"
 
-# sdma driver might already be loaded / initialized in initrd, so provide the firmware as well
-PACKAGE_INSTALL_append += "linux-firmware-imx-sdma-imx7d"
+# needed during production process (DMA module is required by the spidev driver used by the netX driver)
+PACKAGE_INSTALL_append += "kernel-module-imx-sdma linux-firmware-imx-sdma-imx7d"
