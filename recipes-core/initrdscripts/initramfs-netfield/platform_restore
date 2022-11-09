@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ "$1" = "full" ]; then
+	tmpdir=$(mktemp -d)
+	mount /dev/disk/by-label/boot "$tmpdir"
+	tmp_boot_dev=$(readlink -f /dev/disk/by-label/boot | sed -e 's@p\?[1-9]\+$@@')
+
+	if [ -e "$tmpdir/boot.bin" ]; then
+	    dd if="$tmpdir/boot.bin" of="$tmp_boot_dev" seek=33 bs=1k conv=fsync
+	fi
+
+	umount "$tmpdir"
+	rmdir "$tmpdir"
+fi
