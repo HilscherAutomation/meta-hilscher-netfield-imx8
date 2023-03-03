@@ -49,6 +49,7 @@ SYSTEMD_DEFAULT_TARGET ??= "system-up.target"
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "system-up"
 
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
+ADDITIONAL_USB_FILES = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot-2.3-recovery.scr;boot.scr', '', d)}"
 
 #############################################################################
 # Keys
