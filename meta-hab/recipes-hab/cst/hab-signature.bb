@@ -15,6 +15,7 @@ DEPENDS = " \
 
 SRC_URI = " \
 	file://src \
+	file://boot-recovery.cmd \
 "
 SRCREV = "master"
 
@@ -49,6 +50,10 @@ do_compile () {
 	oe_runmake clean
 	oe_runmake srk-fuse
 	oe_runmake imx-boot
+
+	# Build 2.3 compatible USB recovery script
+	uboot-mkimage -A arm64 -c none -T script -d ${WORKDIR}/boot-recovery.cmd ${B}/hab/boot.scr
+	oe_runmake boot-scr
 }
 
 inherit deploy
@@ -60,6 +65,9 @@ do_deploy() {
 
 	# NOTE: If HAB is activated, IMX_BOOT_FILE is already extended by the machine configuration with .signed.
 	ln -sf flash.bin.signed ${DEPLOYDIR}/${IMX_BOOT_FILE}
+
+	# Deploy 2.3 compatible USB recovery script
+	install -m 0644 ${B}/hab/signed/boot-scr/boot.scr.signed ${DEPLOYDIR}/boot-2.3-recovery.scr
 }
 addtask deploy after do_compile
 
