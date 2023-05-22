@@ -73,3 +73,13 @@ addtask deploy after do_compile
 
 # NOTE: Allow an empty package to enable adding this to MACHINE_ESSENTIAL_EXTRA _ * variables.
 ALLOW_EMPTY_${PN} = "1"
+
+inherit hilscher-deploy
+
+hd_path = "${HDEPLOY_PATH_EXTRAS}/soc-fuses"
+
+do_hilscher_deploy() {
+        cp -r ${DEPLOYDIR}/soc-fuses/* "${hd_path}/"
+}
+do_hilscher_deploy[cleandirs] = "${hd_path}/"
+addtask hilscher_deploy before do_build after do_deploy
