@@ -5,6 +5,9 @@ require recipes-kernel/linux/netfield-linux.inc
 # Prevent automatically inclusion of kernel-image into rootfs/image
 RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
 
+# Disable SCMVERSION which might produce a mismatch between kernel version and /lib/modules folder
+SCMVERSION = "n"
+
 # Add support for dtso files
 SRC_URI_append_netfield-compact-x8m-rev1 += " \
     file://0015-of-Add-dt-overlay-configfs-interface-v2.patch \
