@@ -18,7 +18,7 @@ do_install() {
 	install -m 644 ${WORKDIR}/uart1-mode.service ${D}/${systemd_unitdir}/system/
 }
 
-SYSTEMD_SERVICE_${PN} = "uart1-mode.service"
+SYSTEMD_SERVICE:${PN} = "uart1-mode.service"
 
-FILES_${PN} = "${base_sbindir}"
-FILES_${PN} += "${systemd_unitdir}/system"
+FILES:${PN} = "${base_sbindir}"
+FILES:${PN} += "${systemd_unitdir}/system"

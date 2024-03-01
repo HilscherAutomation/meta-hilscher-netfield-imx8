@@ -1,1 +1,1 @@
-SYSTEMD_AUTO_ENABLE_${PN}_netfield-iolink-edge-gw-revx ?= "enable"
+SYSTEMD_AUTO_ENABLE:${PN}:netfield-iolink-edge-gw-revx ?= "enable"

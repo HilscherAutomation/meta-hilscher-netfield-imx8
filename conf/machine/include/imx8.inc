@@ -5,26 +5,43 @@ require conf/machine/include/soc-family.inc
 MACHINEOVERRIDES =. "mx8:mx8m:mx8mm:"
 
 require conf/machine/include/imx-base.inc
-#require conf/machine/include/arm/arch-arm64.inc
-require conf/machine/include/tune-cortexa53.inc
+require conf/machine/include/arm/armv8a/tune-cortexa53.inc
 
-IMAGE_CLASSES_append += "hilscher_image_types"
+# Optee parameters
+OPTEE_BIN_EXT = "8mm"
+OPTEE_PLATFORM_FLAVOR = "mx8mm_cl_iot_gate"
+PLATFORM_FLAVOR = "${OPTEE_PLATFORM_FLAVOR}"
+TEE_LOAD_ADDR = "0x56000000"
+
+ATF_MACHINE_NAME = "bl31-imx8mm.bin"
+PLATFORM = "imx8mm"
+SOC_TARGET = "iMX8MM"
+IMX_BOOT_SOC_TARGET = "iMX8MM"
+
+IMAGE_CLASSES:append = " hilscher_image_types"
 FASTBOOT_SUPPORT = "1"
 IMAGE_FSTYPES += "wic.bz2 swu ${@'fastboot' if d.getVar('FASTBOOT_SUPPORT')=='1' else ''} licenses.tar.bz2"
 SOC_DEFAULT_IMAGE_FSTYPES = ""
 
 # meta-bsp-imx8mm adds git-lfs and bison to hosttools which is not needed / working in our docker env
-HOSTTOOLS_remove += "git-lfs bison"
+HOSTTOOLS:remove = " git-lfs bison"
 # meta-bsp-imx8mm adds firmware-imx-sdma if distro != dunfell which is unavailable in netFIELD which is based on dunfell
-CORE_IMAGE_EXTRA_INSTALL_remove += "firmware-imx-sdma"
+CORE_IMAGE_EXTRA_INSTALL:remove = " firmware-imx-sdma"
+
+# Remove extra installations from meta-imx8mm-bsp's layer.conf
+CORE_IMAGE_EXTRA_INSTALL:remove = " \
+    kernel-modules kernel linux-compulab-headers kernel-dev \
+    packagegroup-tools-bluetooth grub \
+"
+
 # meta-bsp-imx8mm adds kernel image to all images which makes core-image-minimal-initramfs too large
-IMAGE_INSTALL_remove += "kernel-image kernel-modules kernel-devicetree"
+IMAGE_INSTALL:remove = " kernel-image kernel-modules kernel-devicetree"
 
 #############################################################################
 # Preferred components/settings
 #############################################################################
 PREFERRED_PROVIDER_virtual/dtb ??= "device-tree"
-MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "device-tree"
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS:append = " device-tree"
 
 IMX_DEFAULT_BSP = "nxp"
 PREFERRED_PROVIDER_virtual/kernel = "linux-fslc-imx"
@@ -32,23 +49,23 @@ PREFERRED_PROVIDER_virtual/kernel = "linux-fslc-imx"
 # Note: INITRAMFS_IMAGE must only be defined weakly!
 INITRAMFS_IMAGE ?= "core-image-minimal-initramfs"
 HILSCHER_RESCUE_IMAGE ??= "hilscher-rescue-image"
-IMAGE_FSTYPES_remove_pn-hilscher-rescue-image += "squashfs_signed"
-IMAGE_FSTYPES_append_pn-hilscher-rescue-image += "squashfs_xz_signed"
+IMAGE_FSTYPES:remove:pn-hilscher-rescue-image = " squashfs_signed"
+IMAGE_FSTYPES:append:pn-hilscher-rescue-image = " squashfs_xz_signed"
 
 BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deploy"
 
 SERIAL_CONSOLES = "115200;ttymxc2"
 
 MACHINE_FEATURES += "bluetooth optee tpm2"
-MACHINE_SOCARCH_FILTER_append_mx8mm = "virtual/libopenvg virtual/libgles1 virtual/libgles2 virtual/egl virtual/mesa virtual/libgl virtual/libg2d"
+MACHINE_SOCARCH_FILTER:append:mx8mm = " virtual/libopenvg virtual/libgles1 virtual/libgles2 virtual/egl virtual/mesa virtual/libgl virtual/libg2d"
 MACHINE_FIRMWARE += "linux-firmware-bcm4339 linux-firmware-imx-sdma-imx7d"
 
 CIFX_SPI_CONFIGS ?= "Device=spidev2.0;Speed=10000000;Mode=3;ChunkSize=0"
 
 SYSTEMD_DEFAULT_TARGET ??= "system-up.target"
-MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "system-up"
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS:append = " system-up"
 
-MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'hab-signature', '', d)}"
 ADDITIONAL_USB_FILES = "${@bb.utils.contains('MACHINE_FEATURES', 'hab', 'boot-2.3-recovery.scr;boot.scr', '', d)}"
 
 #############################################################################
@@ -68,8 +85,8 @@ FIT_SIGN_ALG = "rsa4096"
 #############################################################################
 # Bootloader
 #############################################################################
-PREFERRED_PROVIDER_virtual/bootloader="u-boot-imx"
-WKS_FILE_DEPENDS_remove_mx8 += "imx-boot"
+PREFERRED_PROVIDER_virtual/bootloader="u-boot-compulab"
+WKS_FILE_DEPENDS:remove:mx8 = " imx-boot"
 
 IMX_BOOT_FILE = "imx-boot"
 IMX_BOOT_FILE .= "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '.signed', '', d)}"
@@ -94,8 +111,8 @@ UBOOT_SIGN_KEYNAME = "boot"
 #############################################################################
 # Kernel
 #############################################################################
-KERNEL_CLASSES_append += "kernel-fitimage"
-KERNEL_IMAGETYPES_append += "fitImage"
+KERNEL_CLASSES:append = " kernel-fitimage"
+KERNEL_IMAGETYPES:append = " fitImage"
 
 #############################################################################
 # Contents of boot partition (excluding rootfs)
@@ -172,4 +189,4 @@ MACHINE_FIRMWARE += "linux-firmware-bcm4329-fullmac linux-firmware-bcm4329"
 # Required for some qualcomm BT sticks
 MACHINE_FIRMWARE += "linux-firmware-qca"
 # netX90 communication
-MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append += "libcifx cifxtun"
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS:append = " libcifx cifxtun"

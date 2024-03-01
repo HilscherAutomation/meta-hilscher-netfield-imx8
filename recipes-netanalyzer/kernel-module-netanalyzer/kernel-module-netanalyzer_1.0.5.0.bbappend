@@ -1,3 +1,3 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI_append += "file://dont_use_memset.patch"
+SRC_URI:append = " file://dont_use_memset.patch"

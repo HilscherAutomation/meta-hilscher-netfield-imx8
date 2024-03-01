@@ -42,4 +42,4 @@ do_install() {
 
 BBCLASSEXTEND = "native"
 PACKAGES = "${PN}"
-FILES_${PN} += "${sbindir}"
+FILES:${PN} += "${sbindir}"

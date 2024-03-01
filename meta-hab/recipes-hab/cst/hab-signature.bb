@@ -23,7 +23,7 @@ S = "${WORKDIR}/src"
 B = "${WORKDIR}/src"
 
 # These files are provided by virtual/bootloader and used by the signing process.
-FILESEXTRAPATHS_prepend := "${DEPLOY_DIR_IMAGE}:"
+FILESEXTRAPATHS:prepend := "${DEPLOY_DIR_IMAGE}:"
 SRC_URI += " \
 	file://flash.bin;subdir=${B}/hab \
 	file://flash.log;subdir=${B}/hab \
@@ -72,7 +72,7 @@ do_deploy() {
 addtask deploy after do_compile
 
 # NOTE: Allow an empty package to enable adding this to MACHINE_ESSENTIAL_EXTRA _ * variables.
-ALLOW_EMPTY_${PN} = "1"
+ALLOW_EMPTY:${PN} = "1"
 
 inherit hilscher-deploy
 

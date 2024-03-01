@@ -14,7 +14,7 @@ inherit systemd
 
 PACKAGES = "${PN}"
 SYSTEMD_PACKAGES="${PN}"
-SYSTEMD_SERVICE_${PN} = "bluetooth-start.service"
+SYSTEMD_SERVICE:${PN} = "bluetooth-start.service"
 SYSTEMD_AUTO_ENABLE ?= "disable"
 
 do_install() {
@@ -22,4 +22,4 @@ do_install() {
     install -m0600 ${WORKDIR}/bluetooth-start.service ${D}${systemd_system_unitdir}
 }
 
-FILES_${PN} = "${systemd_system_unitdir}"
+FILES:${PN} = "${systemd_system_unitdir}"
