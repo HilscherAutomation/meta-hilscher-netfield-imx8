@@ -1,0 +1,14 @@
+This patch disables MSI when a cifX (netX100/500 based) device is found, as it does only support
+legacy interrupts that don't work well on i.MX8 platforms
+
+diff -aurN a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+--- a/drivers/pci/quirks.c	2024-02-29 17:32:25.728081324 +0100
++++ b/drivers/pci/quirks.c	2024-02-29 17:36:20.134519190 +0100
+@@ -2573,6 +2573,7 @@
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8380_0, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SI, 0x0761, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SAMSUNG, 0xa5e3, quirk_disable_all_msi);
++DECLARE_PCI_FIXUP_FINAL(0x15cf, 0x0000, quirk_disable_all_msi);
+ 
+ /* Disable MSI on chipsets that are known to not support it */
+ static void quirk_disable_msi(struct pci_dev *dev)
