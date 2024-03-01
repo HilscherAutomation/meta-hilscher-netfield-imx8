@@ -1,19 +1,18 @@
-#FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}_${PV}:"
-FILESEXTRAPATHS_prepend := "${THISDIR}/u-boot-imx_2020.04:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/u-boot-compulab_2021.04:"
 
-SRC_URI_append += " \
+SRC_URI:append = " \
 	file://enable_hab.cfg \
 	file://0001-bootm-Disable-HAB-verification-for-fitImages.patch \
 	file://0002-rsa-Selecting-RSA_SOFTWARE_EXP-by-default-when-RSA_F.patch \
 	file://0003-Fix-HAB-issues-when-using-AUTOBOOT_STO_STR_SHA256.patch \
 "
 
-SRC_URI_append += " \
+SRC_URI:append = " \
 	file://mkimage_fit_atf.sh \
 	file://print_fit_hab.sh \
 "
 
-do_compile_prepend() {
+do_compile:prepend() {
 	cp ${WORKDIR}/mkimage_fit_atf.sh ${S}/arch/arm/mach-imx
 	if [ -n "${UBOOT_CONFIG}" ]; then
 		for config in ${UBOOT_MACHINE}; do
@@ -25,7 +24,7 @@ do_compile_prepend() {
 }
 
 PRINT_FIT_HAB_OFFSET ?= "0x60000"
-do_compile_append() {
+do_compile:append() {
 	if [ -n "${UBOOT_CONFIG}" ]; then
 		for config in ${UBOOT_MACHINE}; do
 			[ -z "${EXT_DTB}" ] && bbfatal "Invalid or missing virtual/dtb provider."
@@ -37,7 +36,7 @@ do_compile_append() {
 	fi
 }
 
-do_deploy_append() {
+do_deploy:append() {
 	if [ -n "${UBOOT_CONFIG}" ]; then
 		for config in ${UBOOT_MACHINE}; do
 			install -m 0777 ${B}/${config}/flash.log ${DEPLOYDIR}

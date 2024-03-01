@@ -49,7 +49,7 @@ index bb0498bb63..088ae05479 100644
 +	for (uclass_find_first_device(UCLASS_LED, &dev); dev; uclass_find_next_device(&dev))
 +		led_set_state(dev, LEDST_ON);
 +
-+	mdelay(duration_ms);
++	udelay(duration_ms * 1000);
 +
 +	for (uclass_find_first_device(UCLASS_LED, &dev); dev; uclass_find_next_device(&dev))
 +		led_set_state(dev, LEDST_OFF);

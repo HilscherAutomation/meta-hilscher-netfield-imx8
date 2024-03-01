@@ -1,0 +1,24 @@
+Fix /../plat/imx8mm/board/board_addon.c:124: undefined reference to `is_valid_ethaddr'
+
+diff -aurN a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
+--- a/board/compulab/plat/imx8mm/board/board_addon.c	2024-03-01 13:20:40.261956621 +0100
++++ b/board/compulab/plat/imx8mm/board/board_addon.c	2024-03-01 13:25:04.944970654 +0100
+@@ -6,6 +6,7 @@
+ 
+ #include <common.h>
+ #include <led.h>
++#include <net.h>
+ #include <asm-generic/gpio.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+diff -aurN a/board/compulab/plat/imx8mm/board/board.c b/board/compulab/plat/imx8mm/board/board.c
+--- a/board/compulab/plat/imx8mm/board/board.c	2024-03-01 13:20:40.261956621 +0100
++++ b/board/compulab/plat/imx8mm/board/board.c	2024-03-01 13:24:57.244766546 +0100
+@@ -22,6 +22,7 @@
+ #include <asm/arch/clock.h>
+ #include <spl.h>
+ #include <led.h>
++#include <net.h>
+ #include <asm/mach-imx/dma.h>
+ #include <power/pmic.h>
+ #include <power/bd71837.h>

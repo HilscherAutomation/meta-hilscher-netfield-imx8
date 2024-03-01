@@ -7,6 +7,10 @@ MACHINEOVERRIDES =. "mx8:mx8m:mx8mm:"
 require conf/machine/include/imx-base.inc
 require conf/machine/include/arm/armv8a/tune-cortexa53.inc
 
+# Set imx-mkimage boot target
+IMXBOOT_TARGETS = "flash_evk"
+IMAGE_BOOTLOADER = "imx-boot"
+
 # Optee parameters
 OPTEE_BIN_EXT = "8mm"
 OPTEE_PLATFORM_FLAVOR = "mx8mm_cl_iot_gate"
@@ -86,15 +90,14 @@ FIT_SIGN_ALG = "rsa4096"
 # Bootloader
 #############################################################################
 PREFERRED_PROVIDER_virtual/bootloader="u-boot-compulab"
-WKS_FILE_DEPENDS:remove:mx8 = " imx-boot"
 
 IMX_BOOT_FILE = "imx-boot"
 IMX_BOOT_FILE .= "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '.signed', '', d)}"
 IMX_BOOT_SEEK = "33"
 
 UBOOT_MACHINE = "${MACHINE}_defconfig"
-UBOOT_BINARY = "flash.bin"
-UBOOT_MAKE_TARGET_mx8 = "flash.bin"
+UBOOT_SUFFIX = "bin"
+UBOOT_MAKE_TARGET = ""
 
 # NOTE: This is commented out as it is defaulting now.
 #UBOOT_DTB_NAME = "${MACHINE}.dtb"
