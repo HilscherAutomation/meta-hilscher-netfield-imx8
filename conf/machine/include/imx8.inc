@@ -3,12 +3,15 @@ require conf/machine/include/soc-family.inc
 
 # This is required by imx-boot 0.2.bb, because this recipe overrides the SOC_FAMILY variable!
 MACHINEOVERRIDES =. "mx8:mx8m:mx8mm:"
+MACHINEOVERRIDES =. "${@bb.utils.contains('IMX_DEFAULT_BOOTLOADER', 'u-boot-imx', '', 'imx-boot-container:', d)}"
+MACHINEOVERRIDES =. "${@bb.utils.contains('IMX_DEFAULT_BOOTLOADER', 'u-boot-compulab', '', 'compulab-mx8mm:', d)}"
 
 require conf/machine/include/imx-base.inc
 require conf/machine/include/arm/armv8a/tune-cortexa53.inc
 
 # Set imx-mkimage boot target
 IMXBOOT_TARGETS = "flash_evk"
+IMXBOOT_TARGETS_BASENAME = "flash_evk"
 IMAGE_BOOTLOADER = "imx-boot"
 
 # Optee parameters
@@ -17,8 +20,11 @@ OPTEE_PLATFORM_FLAVOR = "mx8mm_cl_iot_gate"
 PLATFORM_FLAVOR = "${OPTEE_PLATFORM_FLAVOR}"
 TEE_LOAD_ADDR = "0x56000000"
 
-ATF_MACHINE_NAME = "bl31-imx8mm.bin"
 PLATFORM = "imx8mm"
+ATF_MACHINE_NAME = "bl31-imx8mm.bin"
+ATF_PLATFORM = "imx8mm"
+ATF_LOAD_ADDR = "0x920000"
+
 SOC_TARGET = "iMX8MM"
 IMX_BOOT_SOC_TARGET = "iMX8MM"
 
@@ -89,20 +95,27 @@ FIT_SIGN_ALG = "rsa4096"
 #############################################################################
 # Bootloader
 #############################################################################
-PREFERRED_PROVIDER_virtual/bootloader="u-boot-compulab"
+IMX_DEFAULT_BOOTLOADER="u-boot-compulab"
+PREFERRED_PROVIDER_virtual/bootloader="${IMX_DEFAULT_BOOTLOADER}"
+
+IMX_EXTRA_FIRMWARE = "firmware-imx-8m"
 
 IMX_BOOT_FILE = "imx-boot"
 IMX_BOOT_FILE .= "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '.signed', '', d)}"
 IMX_BOOT_SEEK = "33"
 
-UBOOT_MACHINE = "${MACHINE}_defconfig"
-UBOOT_SUFFIX = "bin"
-UBOOT_MAKE_TARGET = ""
+UBOOT_CONFIG = "${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'sd-optee', 'sd', d)}"
+UBOOT_CONFIG[sd] = "${MACHINE}_defconfig,sdcard"
+UBOOT_CONFIG[sd-optee] = "${MACHINE}_defconfig,sdcard"
 
-# NOTE: This is commented out as it is defaulting now.
-#UBOOT_DTB_NAME = "${MACHINE}.dtb"
+UBOOT_SUFFIX = "bin"
+UBOOT_BINARY = "flash.${UBOOT_SUFFIX}"
+UBOOT_MAKE_TARGET = "${UBOOT_BINARY}"
+
+UBOOT_DTB_NAME = "${MACHINE}.dtb"
 
 # Set DDR FIRMWARE required by u-boot-spl
+DDR_FIRMWARE_VERSION = "202006"
 DDR_FIRMWARE_NAME = "lpddr4_pmu_train_1d_imem.bin lpddr4_pmu_train_1d_dmem.bin lpddr4_pmu_train_2d_imem.bin lpddr4_pmu_train_2d_dmem.bin"
 
 UBOOT_ENTRYPOINT = "0x40008000"
@@ -110,6 +123,8 @@ UBOOT_DTB_BINARY = ""
 UBOOT_SIGN_ENABLE = "1"
 UBOOT_SIGN_KEYDIR = "${KEYS_DIR}/"
 UBOOT_SIGN_KEYNAME = "boot"
+
+SPL_BINARY = "spl/u-boot-spl.bin"
 
 #############################################################################
 # Kernel
