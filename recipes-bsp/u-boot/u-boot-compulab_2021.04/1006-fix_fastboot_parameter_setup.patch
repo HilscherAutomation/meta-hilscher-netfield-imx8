@@ -2,7 +2,7 @@ diff --git a/board/compulab/plat/imx8mm/board/board.c b/board/compulab/plat/imx8
 index e9ea89886f..b08252976d 100644
 --- a/board/compulab/plat/imx8mm/board/board.c
 +++ b/board/compulab/plat/imx8mm/board/board.c
-@@ -298,7 +298,12 @@ int board_mmc_get_env_dev(int devno)
+@@ -417,7 +417,12 @@ int board_mmc_get_env_dev(int devno)
  		printf("User Environment dev# is (%lu)\n", user_env_devno);
  		return (int)user_env_devno;
  	}
@@ -15,7 +15,7 @@ index e9ea89886f..b08252976d 100644
 +	return devno - 1;
  }
  
- static int _mmc_get_env_part(void)
+ static int _mmc_get_env_part(struct mmc *mmc)
 diff --git a/board/compulab/plat/imx8mm/board/board_addon.c b/board/compulab/plat/imx8mm/board/board_addon.c
 index 088ae05479..5fed46af21 100644
 --- a/board/compulab/plat/imx8mm/board/board_addon.c
@@ -113,16 +113,18 @@ diff --git a/cmd/bootmenu.c b/cmd/bootmenu.c
 index 3dc2c854ac..1d79e773fd 100644
 --- a/cmd/bootmenu.c
 +++ b/cmd/bootmenu.c
-@@ -185,6 +185,8 @@ static void bootmenu_loop(struct bootmenu_data *menu,
- 	/* enter key was pressed */
+@@ -206,6 +206,10 @@ static void bootmenu_loop(struct bootmenu_data *menu,
  	if (c == '\r')
  		*key = KEY_SELECT;
-+	if (c == 0xA) /* netconsole sends only line feed in boot menu, so check for 0xA */
-+		*key = KEY_SELECT;
- }
  
- static char *bootmenu_choice_entry(void *data)
-@@ -245,7 +247,7 @@ static void bootmenu_destroy(struct bootmenu_data *menu)
++	/* netconsole sends only line feed in boot menu, so check for 0xA */
++	if (c == 0xA)
++		*key = KEY_SELECT;
++
+ 	/* ^C was pressed */
+ 	if (c == 0x3)
+ 		*key = KEY_QUIT;
+@@ -277,7 +277,7 @@ static void bootmenu_destroy(struct bootmenu_data *menu)
  	free(menu);
  }
  
@@ -131,7 +133,7 @@ index 3dc2c854ac..1d79e773fd 100644
  {
  	unsigned short int i = 0;
  	const char *option;
-@@ -317,40 +319,41 @@ static struct bootmenu_data *bootmenu_create(int delay)
+@@ -347,40 +349,41 @@ static struct bootmenu_data *bootmenu_create(int delay)
  			break;
  	}
  
@@ -201,8 +203,8 @@ index 3dc2c854ac..1d79e773fd 100644
  	menu->count = i;
  
  	if ((menu->active >= menu->count)||(menu->active < 0)) { //ensure active menuitem is inside menu
-@@ -365,7 +368,7 @@ cleanup:
- 	return NULL;
+@@ -423,7 +426,7 @@ cleanup:
+ 	puts(ANSI_CLEAR_LINE);
  }
  
 -static void bootmenu_show(int delay)
@@ -210,7 +212,7 @@ index 3dc2c854ac..1d79e773fd 100644
  {
  	int init = 0;
  	void *choice = NULL;
-@@ -392,7 +395,7 @@ static void bootmenu_show(int delay)
+@@ -450,7 +453,7 @@ static void bootmenu_show(int delay)
  		return;
  	}
  
@@ -219,7 +221,7 @@ index 3dc2c854ac..1d79e773fd 100644
  	if (!bootmenu)
  		return;
  
-@@ -474,9 +477,9 @@ void menu_display_statusline(struct menu *m)
+@@ -505,9 +508,9 @@ void menu_display_statusline(struct menu *m)
  }
  
  #ifdef CONFIG_AUTOBOOT_MENU_SHOW
@@ -231,7 +233,7 @@ index 3dc2c854ac..1d79e773fd 100644
  	return -1; /* -1 - abort boot and run monitor code */
  }
  #endif
-@@ -485,6 +488,7 @@ int do_bootmenu(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+@@ -516,6 +519,7 @@ int do_bootmenu(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
  {
  	char *delay_str = NULL;
  	int delay = 10;
@@ -239,7 +241,7 @@ index 3dc2c854ac..1d79e773fd 100644
  
  #if defined(CONFIG_BOOTDELAY) && (CONFIG_BOOTDELAY >= 0)
  	delay = CONFIG_BOOTDELAY;
-@@ -493,19 +497,23 @@ int do_bootmenu(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+@@ -524,19 +528,23 @@ int do_bootmenu(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
  	if (argc >= 2)
  		delay_str = argv[1];
  
@@ -269,7 +271,7 @@ diff --git a/drivers/fastboot/fb_mmc.c b/drivers/fastboot/fb_mmc.c
 index d7cf9f4aac..ccacd23432 100644
 --- a/drivers/fastboot/fb_mmc.c
 +++ b/drivers/fastboot/fb_mmc.c
-@@ -471,6 +471,18 @@ void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
+@@ -589,6 +589,18 @@ void fastboot_mmc_flash_write(const char *cmd, void *download_buffer,
  	}
  #endif
  
@@ -287,4 +289,4 @@ index d7cf9f4aac..ccacd23432 100644
 +
  #ifdef CONFIG_ANDROID_BOOT_IMAGE
  	if (strncasecmp(cmd, "zimage", 6) == 0) {
- 		fb_mmc_update_zimage(dev_desc, download_buffer,
+ 		dev_desc = fastboot_mmc_get_dev(response);

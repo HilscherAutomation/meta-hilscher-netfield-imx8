@@ -12,15 +12,15 @@ diff --git a/dts/Makefile b/dts/Makefile
 index a20930eb9a..1520614876 100644
 --- a/dts/Makefile
 +++ b/dts/Makefile
-@@ -29,6 +29,7 @@ endif
+@@ -30,6 +30,7 @@ endif
  
- targets += dt.dtb dt-spl.dtb
+ targets += dt.dtb
  
 +ifeq ($(EXT_DTB),)
  $(DTB): arch-dtbs
  	$(Q)test -e $@ || (						\
  	echo >&2;							\
-@@ -41,6 +42,15 @@ $(DTB): arch-dtbs
+@@ -42,6 +43,15 @@ $(DTB): arch-dtbs
  PHONY += arch-dtbs
  arch-dtbs:
  	$(Q)$(MAKE) $(build)=arch/$(ARCH)/dts dtbs

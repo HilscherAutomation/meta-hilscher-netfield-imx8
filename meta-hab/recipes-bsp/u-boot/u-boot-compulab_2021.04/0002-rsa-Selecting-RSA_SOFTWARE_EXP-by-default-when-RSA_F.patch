@@ -13,14 +13,14 @@ diff --git a/lib/rsa/Kconfig b/lib/rsa/Kconfig
 index 2b33f323bc..91aa2cbe39 100644
 --- a/lib/rsa/Kconfig
 +++ b/lib/rsa/Kconfig
-@@ -1,6 +1,6 @@
+@@ -2,6 +2,6 @@
  	bool "Use RSA Library"
  	select RSA_FREESCALE_EXP if FSL_CAAM && !ARCH_MX7 && !ARCH_MX6 && !ARCH_MX5
 -	select RSA_SOFTWARE_EXP if !RSA_FREESCALE_EXP
 +	select RSA_SOFTWARE_EXP
  	help
  	  RSA support. This enables the RSA algorithm used for FIT image
-
+	  verification in U-Boot.
 -- 
 2.17.1
 
