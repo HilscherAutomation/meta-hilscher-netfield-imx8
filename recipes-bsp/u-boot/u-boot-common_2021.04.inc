@@ -116,11 +116,11 @@ do_configure:prepend() {
 	fi
 }
 
-PLATFORM        ?= "INVALID"
-PLATFORM_mx8qm   = "imx8qm"
-PLATFORM_mx8qxp  = "imx8qxp"
-PLATFORM_mx8mq   = "imx8mq"
-PLATFORM_mx8mm   = "imx8mm"
+ATF_PLATFORM        ?= "INVALID"
+ATF_PLATFORM_mx8qm   = "imx8qm"
+ATF_PLATFORM_mx8qxp  = "imx8qxp"
+ATF_PLATFORM_mx8mq   = "imx8mq"
+ATF_PLATFORM_mx8mm   = "imx8mm"
 
 BOOT_TOOLS ??= "imx-boot-tools"
 
@@ -131,11 +131,11 @@ do_compile:prepend() {
 		for config in ${UBOOT_MACHINE}; do
 			if [ "${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'true', 'false',d)}" = "true" ]; then
 				# Copy ARM Trusted Firmware to build directory
-				cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/bl31-${PLATFORM}.bin-optee ${B}/${config}/bl31.bin
-				cp ${DEPLOY_DIR_IMAGE}/ tee.bin  ${B}/${config}/tee.bin
+				cp ${DEPLOY_DIR_IMAGE}/bl31-${ATF_PLATFORM}.bin-optee ${B}/${config}/bl31.bin
+				cp ${DEPLOY_DIR_IMAGE}/tee.bin  ${B}/${config}/tee.bin
 			else
 				# Copy ARM Trusted Firmware to build directory
-				cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/bl31-${PLATFORM}.bin ${B}/${config}/bl31.bin
+				cp ${DEPLOY_DIR_IMAGE}/bl31-${ATF_PLATFORM}.bin ${B}/${config}/bl31.bin
 			fi
 
 			# Copy DDR training firmware to source directory
@@ -146,11 +146,11 @@ do_compile:prepend() {
 	else
 		if [ "${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'true', 'false',d)}" = "true" ]; then
 			# Copy ARM Trusted Firmware to build directory
-			cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/bl31-${PLATFORM}.bin-optee ${B}/bl31.bin
+			cp ${DEPLOY_DIR_IMAGE}/bl31-${ATF_PLATFORM}.bin-optee ${B}/bl31.bin
 			cp ${DEPLOY_DIR_IMAGE}/tee.bin ${B}/tee.bin
 		else
 			# Copy ARM Trusted Firmware to build directory
-			cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/bl31-${PLATFORM}.bin ${B}/bl31.bin
+			cp ${DEPLOY_DIR_IMAGE}/bl31-${ATF_PLATFORM}.bin ${B}/bl31.bin
 		fi
 
 		# Copy DDR training firmware to source directory
