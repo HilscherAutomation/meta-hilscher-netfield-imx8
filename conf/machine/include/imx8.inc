@@ -36,8 +36,9 @@ HOSTTOOLS:remove = " git-lfs bison"
 # Remove extra installations from meta-imx8mm-bsp's layer.conf
 CORE_IMAGE_EXTRA_INSTALL:remove = " \
     kernel-modules kernel linux-compulab-headers kernel-dev \
-    packagegroup-tools-bluetooth grub \
+    packagegroup-tools-bluetooth grub firmware-imx-sdma-imx7d \
 "
+CORE_IMAGE_EXTRA_INSTALL:append = " linux-firmware-imx-sdma-imx7d"
 
 # meta-bsp-imx8mm adds kernel image to all images which makes core-image-minimal-initramfs too large
 IMAGE_INSTALL:remove = " kernel-image kernel-modules kernel-devicetree"
