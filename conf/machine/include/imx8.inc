@@ -1,10 +1,7 @@
-#SOC_FAMILY = "mx8:mx8m:mx8mm"
+SOC_FAMILY = "mx8mm:imx-nxp-bsp"
 require conf/machine/include/soc-family.inc
 
-# This is required by imx-boot 0.2.bb, because this recipe overrides the SOC_FAMILY variable!
-MACHINEOVERRIDES =. "mx8:mx8m:mx8mm:"
-MACHINEOVERRIDES =. "${@bb.utils.contains('IMX_DEFAULT_BOOTLOADER', 'u-boot-imx', '', 'imx-boot-container:', d)}"
-MACHINEOVERRIDES =. "${@bb.utils.contains('IMX_DEFAULT_BOOTLOADER', 'u-boot-compulab', '', 'compulab-mx8mm:', d)}"
+MACHINEOVERRIDES =. "imx-boot-container:mx8:mx8m:mx8mm:compulab-mx8mm:"
 
 require conf/machine/include/imx-base.inc
 require conf/machine/include/arm/armv8a/tune-cortexa53.inc
@@ -27,6 +24,7 @@ ATF_LOAD_ADDR = "0x920000"
 
 SOC_TARGET = "iMX8MM"
 IMX_BOOT_SOC_TARGET = "iMX8MM"
+DEFAULTTUNE = "aarch64"
 
 IMAGE_CLASSES:append = " hilscher_image_types"
 FASTBOOT_SUPPORT = "1"
@@ -55,6 +53,7 @@ MACHINE_ESSENTIAL_EXTRA_RDEPENDS:append = " device-tree"
 
 IMX_DEFAULT_BSP = "nxp"
 PREFERRED_PROVIDER_virtual/kernel = "linux-fslc-imx"
+PREFERRED_VERSION_imx-atf = "2.6%"
 
 # Note: INITRAMFS_IMAGE must only be defined weakly!
 INITRAMFS_IMAGE ?= "core-image-minimal-initramfs"
@@ -67,8 +66,8 @@ BSP_DEPLOYSCRIPT_DIR ??= "${DYNAMIC_LAYER_DIR_BASE}/meta-freescale/scripts/deplo
 SERIAL_CONSOLES = "115200;ttymxc2"
 
 MACHINE_FEATURES += "bluetooth optee tpm2"
-MACHINE_SOCARCH_FILTER:append:mx8mm = " virtual/libopenvg virtual/libgles1 virtual/libgles2 virtual/egl virtual/mesa virtual/libgl virtual/libg2d"
-MACHINE_FIRMWARE += "linux-firmware-bcm4339 linux-firmware-imx-sdma-imx7d"
+MACHINE_FIRMWARE:append = " linux-firmware-bcm4339 linux-firmware-ax200"
+MACHINE_FIRMWARE:remove = "linux-firmware-ath10k"
 
 CIFX_SPI_CONFIGS ?= "Device=spidev2.0;Speed=10000000;Mode=3;ChunkSize=0"
 
@@ -104,9 +103,9 @@ IMX_BOOT_FILE = "imx-boot"
 IMX_BOOT_FILE .= "${@bb.utils.contains('MACHINE_FEATURES', 'hab', '.signed', '', d)}"
 IMX_BOOT_SEEK = "33"
 
-UBOOT_CONFIG = "${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'sd-optee', 'sd', d)}"
+UBOOT_CONFIG ??= "sd"
 UBOOT_CONFIG[sd] = "${MACHINE}_defconfig,sdcard"
-UBOOT_CONFIG[sd-optee] = "${MACHINE}_defconfig,sdcard"
+UBOOT_CONFIG[mfgtool] = "${MACHINE}_defconfig,sdcard"
 
 UBOOT_SUFFIX = "bin"
 UBOOT_BINARY = "flash.${UBOOT_SUFFIX}"
@@ -115,7 +114,6 @@ UBOOT_MAKE_TARGET = "${UBOOT_BINARY}"
 UBOOT_DTB_NAME = "${MACHINE}.dtb"
 
 # Set DDR FIRMWARE required by u-boot-spl
-DDR_FIRMWARE_VERSION = "202006"
 DDR_FIRMWARE_NAME = "lpddr4_pmu_train_1d_imem.bin lpddr4_pmu_train_1d_dmem.bin lpddr4_pmu_train_2d_imem.bin lpddr4_pmu_train_2d_dmem.bin"
 
 UBOOT_ENTRYPOINT = "0x40008000"

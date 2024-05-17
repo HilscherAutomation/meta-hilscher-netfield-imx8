@@ -28,7 +28,7 @@ do_compile:append() {
 	if [ -n "${UBOOT_CONFIG}" ]; then
 		for config in ${UBOOT_MACHINE}; do
 			[ -z "${EXT_DTB}" ] && bbfatal "Invalid or missing virtual/dtb provider."
-			ATF_LOAD_ADDR=${ATF_LOAD_ADDR} VERSION="v1" ${config}/print_fit_hab.sh ${PRINT_FIT_HAB_OFFSET} ${EXT_DTB} > print_fit_hab.log
+			ATF_LOAD_ADDR=${ATF_LOAD_ADDR} VERSION="v1" ${config}/print_fit_hab.sh ${PRINT_FIT_HAB_OFFSET} ${EXT_DTB} > ${config}/print_fit_hab.log
 		done
 	else
 		[ -z "${EXT_DTB}" ] && bbfatal "Invalid or missing virtual/dtb provider."

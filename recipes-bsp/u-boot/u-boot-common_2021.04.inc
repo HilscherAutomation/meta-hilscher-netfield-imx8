@@ -122,8 +122,6 @@ ATF_PLATFORM_mx8qxp  = "imx8qxp"
 ATF_PLATFORM_mx8mq   = "imx8mq"
 ATF_PLATFORM_mx8mm   = "imx8mm"
 
-BOOT_TOOLS ??= "imx-boot-tools"
-
 do_compile[depends] += "imx-atf:do_deploy firmware-imx-8m:do_deploy \
                         ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-os:do_deploy', '', d)}"
 do_compile:prepend() {
