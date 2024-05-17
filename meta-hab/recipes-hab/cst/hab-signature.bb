@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = ""
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 DEPENDS = " \
-	cst-hsm-tools-native \
+	cst-native \
 	openssl-native \
 	gnutls-native \
 	libp11-native \
@@ -17,7 +17,6 @@ SRC_URI = " \
 	file://src \
 	file://boot-recovery.cmd \
 "
-SRCREV = "master"
 
 S = "${WORKDIR}/src"
 B = "${WORKDIR}/src"
@@ -34,7 +33,7 @@ do_fetch[cleandirs] += "${B}/hab"
 
 export PKCS11_PROXY_SOCKET="${SIGN_WRAPPER_PKCS11_REMOTE}"
 export PKCS11_MODULE_PATH="${STAGING_LIBDIR_NATIVE}/libpkcs11-proxy.so"
-export OPENSSL_ENGINES="${RECIPE_SYSROOT_NATIVE}/usr/lib/engines-1.1/"
+export OPENSSL_ENGINES="${RECIPE_SYSROOT_NATIVE}/usr/lib/engines-3/"
 do_configure[vardeps] += "SIGN_WRAPPER_PKCS11_REMOTE HAB_SRK_TABLE HAB_CSF_KEY HAB_IMG_KEY"
 do_configure() {
 	if [ -z "${SIGN_WRAPPER_PKCS11_REMOTE}" ]; then
