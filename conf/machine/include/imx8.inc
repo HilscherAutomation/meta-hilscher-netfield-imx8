@@ -33,9 +33,6 @@ SOC_DEFAULT_IMAGE_FSTYPES = ""
 
 # meta-bsp-imx8mm adds git-lfs and bison to hosttools which is not needed / working in our docker env
 HOSTTOOLS:remove = " git-lfs bison"
-# meta-bsp-imx8mm adds firmware-imx-sdma if distro != dunfell which is unavailable in netFIELD which is based on dunfell
-CORE_IMAGE_EXTRA_INSTALL:remove = " firmware-imx-sdma"
-
 # Remove extra installations from meta-imx8mm-bsp's layer.conf
 CORE_IMAGE_EXTRA_INSTALL:remove = " \
     kernel-modules kernel linux-compulab-headers kernel-dev \
@@ -67,7 +64,6 @@ SERIAL_CONSOLES = "115200;ttymxc2"
 
 MACHINE_FEATURES += "bluetooth optee tpm2"
 MACHINE_FIRMWARE:append = " linux-firmware-bcm4339 linux-firmware-ax200"
-MACHINE_FIRMWARE:remove = "linux-firmware-ath10k"
 
 CIFX_SPI_CONFIGS ?= "Device=spidev2.0;Speed=10000000;Mode=3;ChunkSize=0"
 
