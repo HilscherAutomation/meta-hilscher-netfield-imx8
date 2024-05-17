@@ -1,6 +1,6 @@
-FILESEXTRAPATHS:prepend := "${TOPDIR}/../meta-bsp-imx8mm/recipes-kernel/linux/compulab/5.15/imx8mm:"
+FILESEXTRAPATHS:prepend := "${TOPDIR}/../meta-bsp-imx8mm/recipes-kernel/linux/compulab/imx8mm:"
 
-require recipes-kernel/linux/compulab/5.15/imx8mm.inc
+require recipes-kernel/linux/compulab/imx8mm.inc
 
 do_configure:append () {
     mkdir ${S}/firmware/brcm -p
