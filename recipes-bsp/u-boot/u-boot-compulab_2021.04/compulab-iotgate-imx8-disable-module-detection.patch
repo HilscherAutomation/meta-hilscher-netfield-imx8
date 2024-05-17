@@ -2,20 +2,20 @@ diff --git a/board/compulab/iot-gate-imx8/iot-gate-imx8.c b/board/compulab/iot-g
 index b69cdbff47..ed6eba14bd 100644
 --- a/board/compulab/iot-gate-imx8/iot-gate-imx8.c
 +++ b/board/compulab/iot-gate-imx8/iot-gate-imx8.c
-@@ -217,6 +217,7 @@ char ied_card_name[IOT_GATE_IMX8_CARD_ID_END][8] = {
- #define IOT_GATE_IMX8_DTB_PATH_ADC0 "/soc@0/bus@30800000/spi@30830000/adc@0"
- #define IOT_GATE_IMX8_DTB_PATH_ADC1 "/soc@0/bus@30800000/spi@30840000/adc@0"
- 
+@@ -249,6 +249,7 @@ char ied_card_name[IOT_GATE_IMX8_CARD_ID_END][8] = {
+ 		return -ENOENT; \
+ 	}
+
 +#if 0
  /*
   * iot_gate_imx8_update_ext_ied()
   * Update device tree of the extended board IED-BASE.
-@@ -341,6 +342,7 @@ err_code:
- 
- 	return 0;
+@@ -334,6 +335,7 @@ err_code:
+ 	printf("%s:%i invalid slot %c card ID: %x\n", __func__, __LINE__, ied_slot_letter[slot], code);
+ 	return -EINVAL;
  }
 +#endif
- 
+
  #define IOT_GATE_IMX8_DTB_UART1_MODE_GPIO_RS232 {0x29000000,		\
  0x1a000000, 0x01000000}
 @@ -454,11 +455,13 @@ int sub_ft_board_setup(void *blob, struct bd_info *bd)
