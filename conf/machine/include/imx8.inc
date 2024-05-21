@@ -13,8 +13,11 @@ IMAGE_BOOTLOADER = "imx-boot"
 
 # Optee parameters
 OPTEE_BIN_EXT = "8mm"
-OPTEE_PLATFORM_FLAVOR = "mx8mm_cl_iot_gate"
-PLATFORM_FLAVOR = "${OPTEE_PLATFORM_FLAVOR}"
+# Variables need to be set to:${MACHINE} as setting imx-nxp-bsp 
+# in SOC_FAMILY results in :mx8mm variables being used instead of
+# "normal" variables
+OPTEE_PLATFORM_FLAVOR:${MACHINE} = "mx8mm_cl_iot_gate"
+PLATFORM_FLAVOR:${MACHINE} = "${OPTEE_PLATFORM_FLAVOR}"
 TEE_LOAD_ADDR = "0x56000000"
 
 PLATFORM = "imx8mm"
@@ -113,7 +116,9 @@ UBOOT_DTB_NAME = "${MACHINE}.dtb"
 # Set DDR FIRMWARE required by u-boot-spl
 DDR_FIRMWARE_NAME = "lpddr4_pmu_train_1d_imem.bin lpddr4_pmu_train_1d_dmem.bin lpddr4_pmu_train_2d_imem.bin lpddr4_pmu_train_2d_dmem.bin"
 
-UBOOT_ENTRYPOINT = "0x40008000"
+# Fix kernel warning by aligning kernel to 2MB boundary (default = 0x40480000)
+#  See [Firmware Bug]: Kernel image misaligned at boot, please fix your bootloader!
+UBOOT_ENTRYPOINT:${MACHINE} = "0x40400000"
 UBOOT_DTB_BINARY = ""
 UBOOT_SIGN_ENABLE = "1"
 UBOOT_SIGN_KEYDIR = "${KEYS_DIR}/"

@@ -3,17 +3,14 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/u-boot-compulab_2021.04:"
 SRC_URI:append = " \
 	file://enable_hab.cfg \
 	file://0001-bootm-Disable-HAB-verification-for-fitImages.patch \
-	file://0002-rsa-Selecting-RSA_SOFTWARE_EXP-by-default-when-RSA_F.patch \
 	file://0003-Fix-HAB-issues-when-using-AUTOBOOT_STO_STR_SHA256.patch \
 "
 
 SRC_URI:append = " \
-	file://mkimage_fit_atf.sh \
 	file://print_fit_hab.sh \
 "
 
 do_compile:prepend() {
-	cp ${WORKDIR}/mkimage_fit_atf.sh ${S}/arch/arm/mach-imx
 	if [ -n "${UBOOT_CONFIG}" ]; then
 		for config in ${UBOOT_MACHINE}; do
 				ln -sf ${WORKDIR}/print_fit_hab.sh ${config}/print_fit_hab.sh

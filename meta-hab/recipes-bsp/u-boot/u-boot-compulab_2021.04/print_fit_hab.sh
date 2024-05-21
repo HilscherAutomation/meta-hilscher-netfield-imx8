@@ -5,7 +5,7 @@ BL32="tee.bin"
 let fit_off=$1
 
 # keep backward compatibility
-[ -z "$TEE_LOAD_ADDR" ] && TEE_LOAD_ADDR="0xfe000000"
+[ -z "$TEE_LOAD_ADDR" ] && TEE_LOAD_ADDR="0x56000000"
 
 if [ -z "$ATF_LOAD_ADDR" ]; then
 	echo "ERROR: BL31 load address is not set" >&2

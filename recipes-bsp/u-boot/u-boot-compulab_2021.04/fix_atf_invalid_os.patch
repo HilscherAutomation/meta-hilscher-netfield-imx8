@@ -1,0 +1,12 @@
+Fix error message when booting ATF in SPL (Loadable is INVALID OS)
+diff -aurN a/arch/arm/mach-imx/mkimage_fit_atf.sh b/arch/arm/mach-imx/mkimage_fit_atf.sh
+--- a/arch/arm/mach-imx/mkimage_fit_atf.sh	2024-05-21 11:44:16.687409865 +0200
++++ b/arch/arm/mach-imx/mkimage_fit_atf.sh	2024-05-21 11:45:48.985789321 +0200
+@@ -95,6 +95,7 @@
+ cat << __HEADER_EOF
+ 		tee@1 {
+ 			description = "TEE firmware";
++			os = "tee";
+ 			data = /incbin/("$BL32");
+ 			type = "firmware";
+ 			arch = "arm64";

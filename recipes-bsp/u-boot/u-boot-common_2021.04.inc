@@ -4,13 +4,6 @@ DEPENDS:append = " u-boot-tools-native"
 
 require recipes-bsp/u-boot/u-boot-netfield.inc
 
-#TODO: Following patches do not apply and unclear if still needed
-# file://1002-clk-composite-Fix-memory-collision-issues.patch
-# file://1009-atheros.c-Fix-the-vddio-1p8v-and-smartEEE-quirk-of-A.patch
-# file://1012-cmd-mii-Fix-wrong-mii-info-message-related-to-PHY-st.patch
-# file://add_gpio-hog_scope.patch
-# file://add_gpio_controlled_boot_menu.patch
-
 SRC_URI:append = " \
 	file://1001-devicetree-Skip-devicetree-building-when-EXT_DTB-is-.patch \
 	file://1003-compulab-imx8mm-Add-Hilscher-enviroments.patch \
@@ -18,6 +11,7 @@ SRC_URI:append = " \
 	file://1005-compulab-imx8mm-Add-LED-support-as-defined-in-the-fo.patch \
 	file://1006-fix_fastboot_parameter_setup.patch \
 	file://1008-fix_phy_initialization.patch \
+	file://1009-atheros.c-Fix-the-vddio-1p8v-and-smartEEE-quirk-of-A.patch \
 	file://1011-drivers-net-phy-Add-devicetree-support-for-the-max-s.patch \
 	file://compulab-iotgate-imx8-add-hilscher-env.patch \
 	file://compulab-iotgate-imx8-disable-module-detection.patch \
@@ -25,7 +19,11 @@ SRC_URI:append = " \
 	file://machine_config.h \
 	file://defconfig \
 	file://0001-Changed-config-file-from-machine-to-distro-specific-.patch \
+	file://0002-rsa-Selecting-RSA_SOFTWARE_EXP-by-default-when-RSA_F.patch \
 	file://fix_compile_errors.patch \
+	file://fix_atf_invalid_os.patch \
+	file://add_gpio-hog_scope.patch \
+	file://add_gpio_controlled_boot_menu.patch \
 	${@bb.utils.contains('MACHINE_FEATURES', 'u-boot-gpio-menu', 'file://gpio-menu.cfg', '' ,d)} \
 	"
 
@@ -85,21 +83,12 @@ do_configure:prepend() {
 
 	export_devicetree_settings -v
 
-	# Replace/Create machine defconfig by defconfig provided by this recipe.
-	for config in ${UBOOT_MACHINE}; do
-		cp -f ${WORKDIR}/${config} ${S}/configs || true
-		ls ${S}/configs/${config} || cp -f ${WORKDIR}/defconfig ${S}/configs/$config
-		ls ${S}/configs/${config} || bbfatal "Invalid or missing $config"
-	done
-
 	# Patch all machine defconfig file, because the $(U_BOOT_ITS) target use CONFIG_OF_LIST
 	# which depends on CONFIG_DEFAULT_DEVICE_TREE.
 	if [ -n "${EXT_DTB}" -o "$DEVICE_TREE" ]; then
-		for config in ${UBOOT_MACHINE}; do
-			sed -i -e 's,.*\(CONFIG_DEFAULT_DTB\).*,\1="'$(basename ${EXT_DTB})'",g' ${S}/configs/$config
-			sed -i -e 's,.*\(CONFIG_DEFAULT_FDT_FILE\).*,\1="'$(basename ${EXT_DTB})'",g' ${S}/configs/$config
-			sed -i -e 's,.*\(CONFIG_DEFAULT_DEVICE_TREE\).*,\1="'$(basename ${EXT_DTB} .dtb)'",g' ${S}/configs/$config
-		done
+		sed -i -e 's,.*\(CONFIG_DEFAULT_DTB\).*,\1="'$(basename ${EXT_DTB})'",g' ${S}/configs/${MACHINE}.config
+		sed -i -e 's,.*\(CONFIG_DEFAULT_FDT_FILE\).*,\1="'$(basename ${EXT_DTB})'",g' ${S}/configs/${MACHINE}.config
+		sed -i -e 's,.*\(CONFIG_DEFAULT_DEVICE_TREE\).*,\1="'$(basename ${EXT_DTB} .dtb)'",g' ${S}/configs/${MACHINE}.config
 	fi
 
 	# Create links to external provided DTB files.
@@ -160,10 +149,10 @@ do_compile:prepend() {
 	export_devicetree_settings
 }
 
-do_compile:prepend:mx8mm() {
+do_compile:prepend() {
 	# for imx8mm change the ATF and TEE load address
-	export ATF_LOAD_ADDR=0x00920000
-	export TEE_LOAD_ADDR=0x7e000000
+	export ATF_LOAD_ADDR=${ATF_LOAD_ADDR}
+	export TEE_LOAD_ADDR=${TEE_LOAD_ADDR}
 }
 
 do_deploy:append() {
