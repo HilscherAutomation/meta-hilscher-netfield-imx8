@@ -1,4 +1,4 @@
-SOC_FAMILY = "mx8mm:imx-nxp-bsp"
+SOC_FAMILY = "mx8mm:mx8-nxp-bsp"
 require conf/machine/include/soc-family.inc
 
 MACHINEOVERRIDES =. "imx-boot-container:mx8:mx8m:mx8mm:compulab-mx8mm:"
@@ -13,7 +13,7 @@ IMAGE_BOOTLOADER = "imx-boot"
 
 # Optee parameters
 OPTEE_BIN_EXT = "8mm"
-# Variables need to be set to:${MACHINE} as setting imx-nxp-bsp 
+# Variables need to be set to:${MACHINE} as setting mx8-nxp-bsp
 # in SOC_FAMILY results in :mx8mm variables being used instead of
 # "normal" variables
 OPTEE_PLATFORM_FLAVOR:${MACHINE} = "mx8mm_cl_iot_gate"

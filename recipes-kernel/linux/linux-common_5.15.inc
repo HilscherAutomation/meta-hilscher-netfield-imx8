@@ -8,6 +8,10 @@ RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
 # Disable SCMVERSION which might produce a mismatch between kernel version and /lib/modules folder
 SCMVERSION = "n"
 
+SRC_URI:append = " \
+    file://netfieldos.cfg \
+"
+
 # Add support for dtso files
 SRC_URI:append:netfield-compact-x8m-rev1 = " \
     file://0015-of-Add-dt-overlay-configfs-interface-v2.patch \
