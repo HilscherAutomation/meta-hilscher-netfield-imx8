@@ -9,7 +9,7 @@ RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
 SCMVERSION = "n"
 
 # Add support for dtso files
-SRC_URI:append_netfield-compact-x8m-rev1 = " \
+SRC_URI:append:netfield-compact-x8m-rev1 = " \
     file://0015-of-Add-dt-overlay-configfs-interface-v2.patch \
     file://of_configfs.cfg \
 "
