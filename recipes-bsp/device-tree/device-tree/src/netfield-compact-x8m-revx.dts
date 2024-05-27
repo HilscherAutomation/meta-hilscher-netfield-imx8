@@ -198,10 +198,6 @@
 	status = "okay";
 };
 
-&pcie0 {
-	ext_osc = <0>;
-};
-
 // NOTE: u-boot only recognizes "fsl,imx27-usb" which is missing in kernel device-tree
 &usbotg1 {
 	vbus-supply = <&reg_vusb_5v>;
