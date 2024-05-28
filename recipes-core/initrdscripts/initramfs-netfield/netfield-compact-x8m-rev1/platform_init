@@ -35,12 +35,12 @@ read_slot() {
 	expander_base=$(ls /sys/devices/platform/soc@0/soc@0:bus@30800000/30a50000.i2c/i2c-3/3-0022/gpio/ | sed 's/[^0-9]*//g')
 
 	# Read gpio's from expander
-	create_gpio $(( expander_base + pin0 )) "in" "id_slot${slot}_bit${pin0}"
-	create_gpio $(( expander_base + pin1 )) "in" "id_slot${slot}_bit${pin1}"
-	create_gpio $(( expander_base + pin2 )) "in" "id_slot${slot}_bit${pin2}"
-	bit0=$(cat "/var/platform/id_slot${slot}_bit${pin0}")
-	bit1=$(cat "/var/platform/id_slot${slot}_bit${pin1}")
-	bit2=$(cat "/var/platform/id_slot${slot}_bit${pin2}")
+	create_gpio $(( expander_base + pin0 )) "in" "id_slot${slot}_bit0"
+	create_gpio $(( expander_base + pin1 )) "in" "id_slot${slot}_bit1"
+	create_gpio $(( expander_base + pin2 )) "in" "id_slot${slot}_bit2"
+	bit0=$(cat "/var/platform/id_slot${slot}_bit0")
+	bit1=$(cat "/var/platform/id_slot${slot}_bit1")
+	bit2=$(cat "/var/platform/id_slot${slot}_bit2")
 	id=$(( bit0 +  bit1 * 2 + bit2 * 4 ))
 
 	echo $id
