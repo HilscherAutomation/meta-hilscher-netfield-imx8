@@ -57,7 +57,7 @@ SRC_URI = " \
 
 COMPATIBLE_MACHINE:niot-e-nfl90-q2n16-n-revx = ".*"
 DTS_BASE:niot-e-nfl90-q2n16-n-revx += " \
-	file://src/niot-e-nfl90-q2n16-n-revx.dts \
+	file://src/niot-e-nfl90-q2n16-n-revx.dtsi \
 	file://src/pad_config.h \
 "
 
@@ -70,7 +70,7 @@ SRC_URI:append:niot-e-nfl90-q2n16-n-rev1 = " \
 
 COMPATIBLE_MACHINE:netfield-iolink-edge-gw-revx = ".*"
 DTS_BASE:netfield-iolink-edge-gw-revx += " \
-	file://src/netfield-iolink-edge-gw-revx.dts \
+	file://src/netfield-iolink-edge-gw-revx.dtsi \
 	file://src/pad_config.h \
 "
 
@@ -87,7 +87,7 @@ SRC_URI:append:netfield-iolink-edge-gw-rev2 = " \
 
 COMPATIBLE_MACHINE:netfield-compact-x8m-revx = ".*"
 DTS_BASE:netfield-compact-x8m-revx += " \
-	file://src/netfield-compact-x8m-revx.dts \
+	file://src/netfield-compact-x8m-revx.dtsi \
 "
 
 SRC_URI:append:netfield-compact-x8m-rev1 = " \

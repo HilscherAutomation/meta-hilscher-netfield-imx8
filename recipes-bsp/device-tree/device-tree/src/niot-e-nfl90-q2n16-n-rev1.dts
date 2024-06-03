@@ -1,6 +1,6 @@
 /dts-v1/;
 
-#include "niot-e-nfl90-q2n16-n-revx.dts"
+#include "niot-e-nfl90-q2n16-n-revx.dtsi"
 
 / {
 	model = "niot-e-nfl90-q2n16-n-rev1";

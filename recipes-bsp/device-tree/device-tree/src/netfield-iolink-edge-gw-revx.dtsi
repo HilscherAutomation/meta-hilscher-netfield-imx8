@@ -1,6 +1,4 @@
-#include "../compulab/ucm-imx8m-mini.dts"
-#include "../freescale/imx8mm.dtsi"
-#include "../freescale/imx8mm-pinfunc.h"
+#include "../compulab/ucm-imx8m-mini.dtsi"
 
 #include "pad_config.h"
 

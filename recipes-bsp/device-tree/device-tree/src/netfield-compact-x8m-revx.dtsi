@@ -1,5 +1,3 @@
-/dts-v1/;
-
 #include "../compulab/sb-iotgimx8.dts"
 /delete-node/ &pinctrl_uart4;
 
