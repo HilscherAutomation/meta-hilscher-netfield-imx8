@@ -18,6 +18,7 @@
 
 / {
 	model = "niot-e-nfl90-q2n16-n-revx";
+	compatible = "niot-e-nfl90-q2n16-n-revx", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 
 	aliases {
 		ethernet0 = &fec1;

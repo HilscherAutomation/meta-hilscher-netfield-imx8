@@ -3,6 +3,7 @@
 
 / {
 	model = "netfield-compact-x8m-revx";
+	compatible = "netfield-compact-x8m-revx", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 
 	aliases {
 		ethernet0 = &fec1;

@@ -13,6 +13,7 @@
 
 / {
 	model = "netfield-iolink-edge-gw-revx";
+	compatible = "netfield-iolink-edge-gw-revx", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 
 	aliases {
 		ethernet0 = &fec1;
