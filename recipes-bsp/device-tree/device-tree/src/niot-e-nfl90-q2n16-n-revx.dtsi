@@ -151,8 +151,8 @@
 		status = "okay";
 		compatible = "rfkill-gpio";
 		reset-gpio = <&gpio4 5 GPIO_ACTIVE_HIGH>;
-		name = "lte_enable";
-		type = "wwan";
+		label = "lte_enable";
+		radio-type = "wwan";
 	};
 };
 
