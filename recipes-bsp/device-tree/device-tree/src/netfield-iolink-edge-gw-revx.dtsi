@@ -91,11 +91,6 @@
 		gpio = <&gpio2 10 GPIO_ACTIVE_HIGH>; // SOM internal
 	};
 
-	reg_usdhc2_vmmc: regulator-usdhc2 {
-		status = "disabled";
-		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>; // SD2_nRST
-	};
-
 	regulator-usdhc3rst {
 		status = "okay";
 		gpio = <&gpio3 16 GPIO_ACTIVE_HIGH>; // SOM internal

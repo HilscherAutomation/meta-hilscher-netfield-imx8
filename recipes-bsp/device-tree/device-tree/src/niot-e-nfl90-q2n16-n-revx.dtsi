@@ -528,25 +528,9 @@
 	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
 	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
 	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
-	//wp-gpios = <&gpio2 20 GPIO_ACTIVE_HIGH>;
 	no-1-8-v;
 	bus-width = <4>;
-	//vmmc-supply = <&reg_usdhc2_vmmc>;
 	status = "okay";
-};
-
-
-/ {
-	reg_usdhc2_vmmc: regulator-usdhc2 {
-		compatible = "regulator-fixed";
-		regulator-name = "VSD_3V3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		startup-delay-us = <100>;
-		off-on-delay-us = <12000>;
-	};
 };
 
 &iomuxc {
@@ -556,9 +540,7 @@
 	ucm-imx8m-mini {
 		pinctrl_usdhc2_gpio: usdhc2grpgpio {
 			fsl,pins = <
-				//MX8MM_IOMUXC_SD2_RESET_B_GPIO2_IO19     0x41
 				MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12          (IS) // an external pulldown exists (orig: 0x41)
-				//MX8MM_IOMUXC_SD2_WP_GPIO2_IO20          0x00
 			>;
 		};
 
