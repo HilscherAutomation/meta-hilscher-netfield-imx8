@@ -42,7 +42,6 @@ SRC_URI:append = " \
 	file://disable_msi_if_cifx_found.patch \
 	file://tpm.cfg \
 	file://led_timer.cfg \
-	file://add_missing_symbols.patch \
 	file://usb.cfg \
 "
 
