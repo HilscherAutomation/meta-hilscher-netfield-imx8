@@ -21,25 +21,10 @@
 	compatible = "niot-e-nfl90-q2n16-n-revx", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 
 	aliases {
-		ethernet0 = &fec1;
-		i2c0 = &i2c1;
-		i2c1 = &i2c2;
-		i2c2 = &i2c3;
-		i2c3 = &i2c4;
-		serial0 = &uart1;
-		serial1 = &uart2;
-		serial2 = &uart3;
-		serial3 = &uart4;
-		spi0 = &ecspi1;
-		spi1 = &ecspi2;
-		spi2 = &ecspi3;
 		mmc0 = &usdhc2; /* SD-Card */
 		mmc1 = &usdhc3; /* eMMC */
-		gpio0 = &gpio1;
-		gpio1 = &gpio2;
-		gpio2 = &gpio3;
-		gpio3 = &gpio4;
-		gpio4 = &gpio5;
+		/delete-property/ mmc2;
+
 		rtc0 = &rtc0;
 		rtc1 = &snvs_rtc;
 	};
@@ -151,8 +136,8 @@
 		status = "okay";
 		compatible = "rfkill-gpio";
 		reset-gpio = <&gpio4 5 GPIO_ACTIVE_HIGH>;
-		name = "lte_enable";
-		type = "wwan";
+		label = "lte_enable";
+		radio-type = "wwan";
 	};
 };
 
@@ -528,25 +513,9 @@
 	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
 	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
 	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
-	//wp-gpios = <&gpio2 20 GPIO_ACTIVE_HIGH>;
 	no-1-8-v;
 	bus-width = <4>;
-	//vmmc-supply = <&reg_usdhc2_vmmc>;
 	status = "okay";
-};
-
-
-/ {
-	reg_usdhc2_vmmc: regulator-usdhc2 {
-		compatible = "regulator-fixed";
-		regulator-name = "VSD_3V3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		startup-delay-us = <100>;
-		off-on-delay-us = <12000>;
-	};
 };
 
 &iomuxc {
@@ -556,9 +525,7 @@
 	ucm-imx8m-mini {
 		pinctrl_usdhc2_gpio: usdhc2grpgpio {
 			fsl,pins = <
-				//MX8MM_IOMUXC_SD2_RESET_B_GPIO2_IO19     0x41
 				MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12          (IS) // an external pulldown exists (orig: 0x41)
-				//MX8MM_IOMUXC_SD2_WP_GPIO2_IO20          0x00
 			>;
 		};
 

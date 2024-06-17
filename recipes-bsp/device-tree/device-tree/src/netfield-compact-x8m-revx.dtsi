@@ -1,4 +1,5 @@
 #include "../compulab/sb-iotgimx8.dts"
+/delete-node/ &uart1;
 /delete-node/ &pinctrl_uart4;
 
 / {
@@ -6,29 +7,15 @@
 	compatible = "netfield-compact-x8m-revx", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 
 	aliases {
-		ethernet0 = &fec1;
-		i2c0 = &i2c1;
-		i2c1 = &i2c2;
-		i2c2 = &i2c3;
-		i2c3 = &i2c4;
 		serial0 = &uart1_switchable;
-		serial1 = &uart2;
-		serial2 = &uart3;
-		serial3 = &uart4;
+
 		mmc0 = &usdhc2; /* SD-Card */
 		mmc1 = &usdhc3; /* eMMC */
-		gpio0 = &gpio1;
-		gpio1 = &gpio2;
-		gpio2 = &gpio3;
-		gpio3 = &gpio4;
-		gpio4 = &gpio5;
-		spi0 = &flexspi;
+		/delete-property/ mmc2;
+
 		usb0 = &usbotg1;
 		usb1 = &usbotg2;
 		video0 = &lcdif;
-		rtc0 = &rtc0;
-		rtc1 = &snvs_rtc;
-
 	};
 
 	clocks {
@@ -212,8 +199,6 @@
 //   This enables the uart1 mode selection (RS485/RS232) by device-tree overlays.
 
 / {
-	/delete-node/ regulator-uart1-mode;
-
 	regulator_uart1_mode_rs485: regulator-uart1-mode-rs485 {
 		compatible = "regulator-fixed";
 		regulator-name = "uart1_mode_rs485";
@@ -237,8 +222,6 @@
 };
 
 &aips3 {
-	/delete-node/ serial@30860000;
-
 	uart1_switchable: serial@30860000 {
 		compatible = "fsl,imx8mm-uart", "fsl,imx6q-uart";
 		reg = <0x30860000 0x10000>;

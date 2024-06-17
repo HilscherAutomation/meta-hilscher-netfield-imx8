@@ -43,7 +43,4 @@ platform_init_run() {
 
 	#led will be used to signal that device is in rescue boot mode
 	ln -s /sys/class/leds/apl_red/brightness  /var/platform/rescue_mode_led
-
-	# Exclude non-usable devices (e.g. eMMC when using SD and vice versa
-	lvm_exclude
 }
