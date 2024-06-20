@@ -103,8 +103,9 @@ KERNEL_IMAGETYPES_append += "fitImage"
 IMAGE_BOOT_FILES  = "${IMX_BOOT_FILE};boot.bin"
 
 # depending on the image settings choose the correct boot script
-SCRIPT_SUFFIX = "${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '-debug.scr', "-fastboot.scr" ,d)}"
-IMAGE_BOOT_FILES += "boot-script-fit/fitImage-boot-menu${SCRIPT_SUFFIX};boot-fit.scr"
+BOOTSCRIPT = "fitImage-boot-menu${@'-fastboot' if d.getVar('FASTBOOT_SUPPORT')=='1' else ''}"
+SCRIPT_SUFFIX = "${@bb.utils.contains('IMAGE_FEATURES', 'debug-tweaks', '-console.scr', ".scr" ,d)}"
+IMAGE_BOOT_FILES += "boot-script-fit/${BOOTSCRIPT}${SCRIPT_SUFFIX};boot-fit.scr"
 
 #############################################################################
 # WIC images
