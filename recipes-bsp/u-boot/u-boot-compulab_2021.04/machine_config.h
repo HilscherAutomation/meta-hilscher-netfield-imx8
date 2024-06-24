@@ -40,7 +40,7 @@
 		"part number $plat_dev_if $plat_dev boot plat_boot_part; " \
 		"part number $plat_dev_if $plat_dev system plat_system_part; " \
 		"usb reset; " \
-		"part number $usb_dev_if $usb_dev recovery usb_recovery_part; " \
+		"setenv usb_recovery_part 1; " \
 		"hab_status"
 #else
 	/* Platform specific initialization */
@@ -50,7 +50,7 @@
 		"part number $plat_dev_if $plat_dev boot plat_boot_part; " \
 		"part number $plat_dev_if $plat_dev system plat_system_part; " \
 		"usb reset; " \
-		"part number $usb_dev_if $usb_dev recovery usb_recovery_part; "
+		"setenv usb_recovery_part 1; "
 #endif
 
 /* Platform specific environment settings */
