@@ -1,0 +1,25 @@
+From da066c2c3777802ca267682387268a3fea5589a7 Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Fri, 1 Oct 2021 12:10:06 +0200
+Subject: [PATCH] rsa: Selecting RSA_SOFTWARE_EXP by default, as FREESCALE_EXP can
+ only be used with HAB signed images and fails with signed fitimages
+
+---
+ lib/rsa/Kconfig | 1 +-
+ 1 file changed, 1 insertion(+), 2 deletion(-)
+
+diff --git a/lib/rsa/Kconfig b/lib/rsa/Kconfig
+index 2b33f323bc..91aa2cbe39 100644
+--- a/lib/rsa/Kconfig
++++ b/lib/rsa/Kconfig
+@@ -2,6 +2,5 @@
+ config RSA
+ 	bool "Use RSA Library"
+-	select RSA_FREESCALE_EXP if FSL_CAAM && !ARCH_MX7 && !ARCH_MX6 && !ARCH_MX5
+-	select RSA_SOFTWARE_EXP if !RSA_FREESCALE_EXP
++	select RSA_SOFTWARE_EXP
+ 	help
+ 	  RSA support. This enables the RSA algorithm used for FIT image
+	  verification in U-Boot.
+-- 
+2.17.1

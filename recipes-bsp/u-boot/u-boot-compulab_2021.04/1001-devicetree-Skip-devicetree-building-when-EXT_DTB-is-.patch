@@ -1,0 +1,41 @@
+From 6094dadd09039d6cda81b07de5b60e64a41d8325 Mon Sep 17 00:00:00 2001
+From: FME <github@hilscher.com>
+Date: Tue, 10 Dec 2019 13:53:34 +0100
+Subject: [PATCH 1/6] devicetree: Skip devicetree building when EXT_DTB is
+ defined.
+
+---
+ dts/Makefile | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/dts/Makefile b/dts/Makefile
+index a20930eb9a..1520614876 100644
+--- a/dts/Makefile
++++ b/dts/Makefile
+@@ -30,6 +30,7 @@ endif
+ 
+ targets += dt.dtb
+ 
++ifeq ($(EXT_DTB),)
+ $(DTB): arch-dtbs
+ 	$(Q)test -e $@ || (						\
+ 	echo >&2;							\
+@@ -42,6 +43,15 @@ $(DTB): arch-dtbs
+ PHONY += arch-dtbs
+ arch-dtbs:
+ 	$(Q)$(MAKE) $(build)=arch/$(ARCH)/dts dtbs
++else
++PHONY += $(DTB)
++$(DTB):
++	$(Q)test -e $@ || ( \
++	echo >&2 "==================================== ERROR ====================================="; \
++	echo >&2 "Invalid or missing EXT_DTB='$@'!"; \
++	echo >&2 "================================================================================"; \
++	/bin/false)
++endif # EXT_DTB
+ 
+ ifeq ($(CONFIG_SPL_BUILD),y)
+ obj-$(CONFIG_OF_EMBED) := dt-spl.dtb.o
+-- 
+2.17.1
+

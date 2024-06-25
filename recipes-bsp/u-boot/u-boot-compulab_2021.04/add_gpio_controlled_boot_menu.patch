@@ -1,0 +1,23 @@
+diff --git a/cmd/Kconfig b/cmd/Kconfig
+index 832b2ceb4c0..154b3e73b42 100644
+--- a/cmd/Kconfig
++++ b/cmd/Kconfig
+@@ -300,6 +300,18 @@ config CMD_BOOTMENU
+ 	help
+ 	  Add an ANSI terminal boot menu command.
+ 
++config BOOTMENU_GPIO
++	bool "Enable GPIO base menu control"
++	depends on CMD_BOOTMENU
++
++config BOOTMENU_GPIO_CTRL
++	string ""
++	depends on BOOTMENU_GPIO
++
++config BOOTMENU_GPIO_LED
++	string ""
++	depends on BOOTMENU_GPIO
++
+ config CMD_ADTIMG
+ 	bool "adtimg"
+ 	help

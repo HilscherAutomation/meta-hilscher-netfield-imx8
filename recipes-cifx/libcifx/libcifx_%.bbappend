@@ -1,4 +1,4 @@
-PACKAGECONFIG_append += "tun spm"
+PACKAGECONFIG:append = " tun spm"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI_append_netfield-iolink-edge-gw-revx += "file://skip_firmware_ident.patch"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+SRC_URI:append:netfield-iolink-edge-gw-revx = " file://skip_firmware_ident.patch"

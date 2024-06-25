@@ -5,11 +5,9 @@ LIC_FILES_CHKSUM = ""
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 DEPENDS = " \
-	cst-hsm-tools-native \
+	cst-native \
 	openssl-native \
 	gnutls-native \
-	libp11-native \
-	pkcs11-proxy-native \
 	xxd-native \
 "
 
@@ -17,13 +15,14 @@ SRC_URI = " \
 	file://src \
 	file://boot-recovery.cmd \
 "
-SRCREV = "master"
 
 S = "${WORKDIR}/src"
 B = "${WORKDIR}/src"
 
+inherit sign-wrapper
+
 # These files are provided by virtual/bootloader and used by the signing process.
-FILESEXTRAPATHS_prepend := "${DEPLOY_DIR_IMAGE}:"
+FILESEXTRAPATHS:prepend := "${DEPLOY_DIR_IMAGE}:"
 SRC_URI += " \
 	file://flash.bin;subdir=${B}/hab \
 	file://flash.log;subdir=${B}/hab \
@@ -31,21 +30,35 @@ SRC_URI += " \
 "
 do_fetch[depends] += "virtual/bootloader:do_deploy"
 do_fetch[cleandirs] += "${B}/hab"
+do_fetch[vardeps] += "SIGN_WRAPPER_PKCS11_REMOTE SIGN_WRAPPER_KEYS_SHA HAB_SRK_TABLE HAB_CSF_KEY HAB_IMG_KEY"
 
-export PKCS11_PROXY_SOCKET="${SIGN_WRAPPER_PKCS11_REMOTE}"
-export PKCS11_MODULE_PATH="${STAGING_LIBDIR_NATIVE}/libpkcs11-proxy.so"
-export OPENSSL_ENGINES="${RECIPE_SYSROOT_NATIVE}/usr/lib/engines-1.1/"
 do_configure[vardeps] += "SIGN_WRAPPER_PKCS11_REMOTE HAB_SRK_TABLE HAB_CSF_KEY HAB_IMG_KEY"
 do_configure() {
-	if [ -z "${SIGN_WRAPPER_PKCS11_REMOTE}" ]; then
-		bbfatal "SIGN_WRAPPER_PKCS11_REMOTE not defined!"
+	setup_sign_wrapper_env
+
+	HAB_SRK_TABLE="${HAB_SRK_TABLE}"
+	HAB_CSF_KEY="${HAB_CSF_KEY}"
+	HAB_IMG_KEY="${HAB_IMG_KEY}"
+
+	if [ "${SIGN_WRAPPER_MODE}" = "file" ]; then
+		# Prepend path as signing tool requires full path
+		HAB_SRK_TABLE="${SIGN_WRAPPER_KEY_SRC}/$HAB_SRK_TABLE"
+		HAB_CSF_KEY="${SIGN_WRAPPER_KEY_SRC}/$HAB_CSF_KEY"
+		HAB_IMG_KEY="${SIGN_WRAPPER_KEY_SRC}/$HAB_IMG_KEY"
 	fi
-	sed -i 's,###_HAB_SRK_TABLE_###,${HAB_SRK_TABLE},g' hab/*.in
-	sed -i 's,###_HAB_CSF_KEY_###,${HAB_CSF_KEY},g' hab/*.in
-	sed -i 's,###_HAB_IMG_KEY_###,${HAB_IMG_KEY},g' hab/*.in
+
+	sed -i "s,###_HAB_SRK_TABLE_###,$HAB_SRK_TABLE,g" hab/*.in
+	sed -i "s,###_HAB_CSF_KEY_###,$HAB_CSF_KEY,g" hab/*.in
+	sed -i "s,###_HAB_IMG_KEY_###,$HAB_IMG_KEY,g" hab/*.in
 }
 
 do_compile () {
+	setup_sign_wrapper_env
+
+	if [ "${SIGN_WRAPPER_MODE}" = "pkcs11" ]; then
+		export CST="cst -b pkcs11"
+	fi
+
 	bbwarn "A HAB signing process will be done."
 	oe_runmake clean
 	oe_runmake srk-fuse
@@ -72,7 +85,7 @@ do_deploy() {
 addtask deploy after do_compile
 
 # NOTE: Allow an empty package to enable adding this to MACHINE_ESSENTIAL_EXTRA _ * variables.
-ALLOW_EMPTY_${PN} = "1"
+ALLOW_EMPTY:${PN} = "1"
 
 inherit hilscher-deploy
 

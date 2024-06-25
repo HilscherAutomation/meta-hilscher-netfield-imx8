@@ -1,0 +1,15 @@
+diff -aurN a/code/back_end-ssl/src/pkey.c c/code/back_end-ssl/src/pkey.c
+--- a/code/back_end-ssl/src/pkey.c	2024-01-02 19:13:36.000000000 +0100
++++ c/code/back_end-ssl/src/pkey.c	2024-05-17 16:02:05.763909928 +0200
+@@ -102,7 +102,10 @@
+         return 0;
+     }
+ 
+-    fgets(buf, size, password_fp);
++    char* res = fgets(buf, size, password_fp);
++    if(!res)
++        return 0;
++
+     chomp(buf);
+ 
+     return strlen(buf);

@@ -1,0 +1,45 @@
+diff -aurN a/code/build/make/binaries.mk b/code/build/make/binaries.mk
+--- a/code/build/make/binaries.mk	2024-01-02 19:13:36.000000000 +0100
++++ b/code/build/make/binaries.mk	2024-05-17 16:04:48.568106224 +0200
+@@ -37,13 +37,6 @@
+ #===============================================================================
+ CINCLUDES := $(foreach dir,$(VPATH),-I$(dir)/../hdr)
+ 
+-# OpenSSL
+-COPTIONS  += -I$(_OPENSSL_PATH)/include
+-LDOPTIONS += -L$(_OPENSSL_PATH) -L$(_OPENSSL_PATH)/lib
+-ifeq ($(OSTYPE),linux64)
+-LDOPTIONS += -L$(_OPENSSL_PATH)/lib64
+-endif
+-
+ include ../build/make/$(TOOLCHAIN).mk
+ include ../build/make/objects.mk
+ 
+diff -aurN a/code/build/make/gcc.mk b/code/build/make/gcc.mk
+--- a/code/build/make/gcc.mk	2024-01-02 19:13:36.000000000 +0100
++++ b/code/build/make/gcc.mk	2024-05-17 15:47:28.881299092 +0200
+@@ -13,10 +13,10 @@
+ #==============================================================================
+ # Toolchain commands
+ #==============================================================================
+-CC      := gcc
+-AR      := ar
+-LD      := gcc
+-OBJCOPY := objcopy
++CC      ?= gcc
++AR      ?= ar
++LD      ?= gcc
++OBJCOPY ?= objcopy
+ 
+ # C compiler flags
+ #==============================================================================
+diff -aurN a/code/obj.linux64/Makefile b/code/obj.linux64/Makefile
+--- a/code/obj.linux64/Makefile	2024-01-02 19:13:36.000000000 +0100
++++ b/code/obj.linux64/Makefile	2024-05-17 16:04:12.431174813 +0200
+@@ -18,6 +18,5 @@
+ # Configuration-specific customization
+ 
+ COPTIONS += -m64
+-LDOPTIONS += -m64
+ 
+ include ../build/make/binaries.mk
