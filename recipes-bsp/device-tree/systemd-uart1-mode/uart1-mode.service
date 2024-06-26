@@ -1,6 +1,6 @@
 [Unit]
 Description=Setup uart1 mode
-//ConditionPathExists=/etc/default/uart1
+#ConditionPathExists=/etc/default/uart1
 
 [Service]
 Type=oneshot
