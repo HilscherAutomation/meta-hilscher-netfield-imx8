@@ -205,10 +205,12 @@
 &usbotg1 {
 	vbus-supply = <&reg_vusb_5v>;
 	compatible = "fsl,imx8mm-usb", "fsl,imx7d-usb", "fsl,imx27-usb";
+	disable-over-current;
 };
 
 &usbotg2 {
 	compatible = "fsl,imx8mm-usb", "fsl,imx7d-usb", "fsl,imx27-usb";
+	disable-over-current;
 };
 
 /* -------------------------------------------------------------------------- */
