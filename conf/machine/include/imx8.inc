@@ -30,7 +30,6 @@ IMX_BOOT_SOC_TARGET = "iMX8MM"
 DEFAULTTUNE = "aarch64"
 
 IMAGE_CLASSES:append = " hilscher_image_types"
-FASTBOOT_SUPPORT = "1"
 IMAGE_FSTYPES += "wic.bz2 swu ${@'fastboot' if d.getVar('FASTBOOT_SUPPORT')=='1' else ''} licenses.tar.bz2"
 SOC_DEFAULT_IMAGE_FSTYPES = ""
 
