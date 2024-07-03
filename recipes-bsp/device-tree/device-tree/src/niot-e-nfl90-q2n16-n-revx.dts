@@ -442,11 +442,13 @@
 	status = "okay";
 	dr_mode = "host";
 	compatible = "fsl,imx8mm-usb", "fsl,imx7d-usb", "fsl,imx27-usb";
+	disable-over-current;
 };
 
 &usbotg2 { /* internal connected to LAN9514I-JZX - USB 2.0 Hub and 10/100 Ethernet Controller */
 	status = "okay";
 	dr_mode = "host";
+	disable-over-current;
 };
 
 &fec1 {
