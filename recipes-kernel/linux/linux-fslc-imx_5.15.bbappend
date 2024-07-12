@@ -1,5 +1,6 @@
 # Include required compulab stuff
 require compulab-bsp.inc
+require cve-exclusions.inc
 
 include linux-common_5.15.inc
 
