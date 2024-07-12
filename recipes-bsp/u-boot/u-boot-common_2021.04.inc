@@ -24,6 +24,7 @@ SRC_URI:append = " \
 	file://fix_atf_invalid_os.patch \
 	file://add_gpio-hog_scope.patch \
 	file://add_gpio_controlled_boot_menu.patch \
+	file://fix-boot-script-issues-related-to-unit-addressing.patch \
 	${@bb.utils.contains('MACHINE_FEATURES', 'u-boot-gpio-menu', 'file://gpio-menu.cfg', '' ,d)} \
 	"
 
