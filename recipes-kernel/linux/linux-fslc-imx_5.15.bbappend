@@ -1,5 +1,6 @@
 # Include required compulab stuff
 require compulab-bsp.inc
+require cve-exclusions.inc
 
 include linux-common_5.15.inc
 
@@ -9,7 +10,10 @@ SRCREV = "411c52448fdc0906f70c4585c7e05359c0b05c11"
 SRCREV_meta = "a9112e1b2552a7b037b2f90699505e7c1e4d6a34"
 SRCREV_FORMAT = "meta_${@d.getVar('SRCREV', True)[:10]}"
 
-LINUX_VERSION="5.15.158"
+LINUX_VERSION="5.15.162"
+# Update kernel via patch, as it is not yet available mainline
+SRC_URI:append = " file://linux-5.15.158-to-162.patch"
+addtask do_kernel_version_sanity_check after do_patch
 
 # TODO: SMSC95xx patch fails to compile on newer kernels. Its' unclear if it is required
 SRC_URI:remove = " file://0089-net-smsc95-Fix-phy-issue.patch"
