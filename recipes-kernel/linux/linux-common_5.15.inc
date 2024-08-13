@@ -43,6 +43,7 @@ SRC_URI:append = " \
 	file://tpm.cfg \
 	file://led_timer.cfg \
 	file://usb.cfg \
+	file://enable_abx80x.cfg \
 "
 
 # Enable module for qemu support
