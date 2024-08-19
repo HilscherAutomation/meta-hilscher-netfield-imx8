@@ -1,5 +1,4 @@
 #include "../compulab/sb-iotgimx8.dts"
-/delete-node/ &uart1;
 /delete-node/ &pinctrl_uart4;
 
 / {
@@ -7,8 +6,6 @@
 	compatible = "netfield-compact-x8m-revx", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 
 	aliases {
-		serial0 = &uart1_switchable;
-
 		mmc0 = &usdhc2; /* SD-Card */
 		mmc1 = &usdhc3; /* eMMC */
 		/delete-property/ mmc2;
@@ -199,47 +196,27 @@
 //   This enables the uart1 mode selection (RS485/RS232) by device-tree overlays.
 
 / {
-	regulator_uart1_mode_rs485: regulator-uart1-mode-rs485 {
-		compatible = "regulator-fixed";
-		regulator-name = "uart1_mode_rs485";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio4 26 GPIO_ACTIVE_HIGH>; //gpio = <&gpio4 26 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		regulator-always-on;
-		status = "disabled";
-	};
-	regulator_uart1_mode_rs232: regulator-uart1-mode-rs232 {
-		compatible = "regulator-fixed";
-		regulator-name = "uart1_mode_rs232";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio4 26 GPIO_ACTIVE_LOW>; //<&gpio4 26 GPIO_ACTIVE_LOW>;
-		enable-active-low;
-		regulator-always-on;
+	regulator_uart1_mode: regulator-uart1-mode {
+		/delete-property/ enable-active-high;
 		status = "disabled";
 	};
 };
 
-&aips3 {
-	uart1_switchable: serial@30860000 {
-		compatible = "fsl,imx8mm-uart", "fsl,imx6q-uart";
-		reg = <0x30860000 0x10000>;
-		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&clk IMX8MM_CLK_UART1_ROOT>, <&clk IMX8MM_CLK_UART1_ROOT>;
-		clock-names = "ipg", "per";
-		assigned-clocks = <&clk IMX8MM_CLK_UART1>;
-		assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+&uart1 {
+	/delete-property/ pinctrl-names;
+	/delete-property/ pinctrl-0;
 
-		dmas = <&sdma1 22 4 0>, <&sdma1 23 4 0>;
-		dma-names = "rx", "tx";
+	/delete-property/ linux,rs485-enabled-at-boot-time;
+	/delete-property/rs485-rts-active-high;
+	/delete-property/ rts-gpios;
 
-		status = "disabled";
-	};
+	status = "disabled";
 };
 
 &iomuxc {
 	sb-iotgimx8 {
+		/delete-node/ uart1grp;
+
 		pinctrl_uart1_rs485: uart1grp-rs485 {
 			fsl,pins = <
 				MX8MM_IOMUXC_SAI2_RXC_UART1_DCE_RX 0x140
@@ -248,6 +225,7 @@
 				MX8MM_IOMUXC_SAI2_TXFS_UART1_DTE_RTS_B 0x140 /* CTS */
 			>;
 		};
+
 		pinctrl_uart1_rs232: uart1grp-rs232 {
 			fsl,pins = <
 				MX8MM_IOMUXC_SAI2_RXC_UART1_DCE_RX	0x140
@@ -256,7 +234,13 @@
 				MX8MM_IOMUXC_SAI2_TXFS_UART1_DTE_RTS_B	0x140 /* CTS */
 			>;
 		};
+	};
+};
 
+/* -------------------------------------------------------------------------- */
+
+&iomuxc {
+	sb-iotgimx8 {
 		pinctrl_vbus_gpio: pinctrl_vbus_gpio {
 			fsl,pins = <
 				MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28	0x140 /* USB_PS_EN */
