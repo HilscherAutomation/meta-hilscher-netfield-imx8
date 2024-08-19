@@ -5,7 +5,6 @@ Description=Setup uart1 mode
 [Service]
 Type=oneshot
 RemainAfterExit=Yes
-StandardOutput=syslog
 ExecStart=/sbin/uart1-mode.sh start
 ExecStop=/sbin/uart1-mode.sh stop
 
