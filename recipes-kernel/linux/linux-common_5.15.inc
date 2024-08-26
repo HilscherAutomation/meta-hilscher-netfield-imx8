@@ -50,7 +50,7 @@ SRC_URI:append = " \
 SRC_URI:append = " file://binfmt_misc.cfg"
 
 # TPM2.0 via I2C support
-SRC_URI:append = " file://add_st_tpm2_i2c_support.patch;patchdir=drivers/char/tpm \
+SRC_URI:append = " file://add_st_tpm2_i2c_support.patch \
                    file://tpm_tcg_i2c.cfg"
 
 # ------------------------------------------------------------------------------
