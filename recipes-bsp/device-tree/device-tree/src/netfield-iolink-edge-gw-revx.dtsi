@@ -299,7 +299,7 @@
 	>;
 
 	spi3_0: netx90_spm@0 {
-		compatible = "spidev";
+		compatible = "rohm,dh2228fv"; // Use fake device to enable spidev!
 		reg = <0>;
 		spi-max-frequency = <125000000>;
 	};
