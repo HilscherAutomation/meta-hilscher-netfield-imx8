@@ -1,7 +1,0 @@
-/dts-v1/;
-
-#include "netfield-iolink-edge-gw-revx.dtsi"
-
-/ {
-	model = "netfield-iolink-edge-gw-rev1";
-};
