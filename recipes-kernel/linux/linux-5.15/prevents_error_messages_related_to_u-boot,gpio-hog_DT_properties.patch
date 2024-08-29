@@ -1,0 +1,27 @@
+From 287934d1e2b0734a8eca8be4cc5e4e9b2e773c5f Mon Sep 17 00:00:00 2001
+From: OpenEmbedded <oe.patch@oe>
+Date: Thu, 29 Aug 2024 13:41:27 +0000
+Subject: [PATCH] Prevents error messages related to 'u-boot,gpio-hog' DT properties.
+
+Aug 29 14:22:14 localhost kernel: OF: /soc@0/bus@30000000/gpio@30200000/u-boot-ctrl-gpio: could not get #gpio-cells for /cpus/idle-states/cpu-pd-wait
+
+---
+ drivers/of/property.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/of/property.c b/drivers/of/property.c
+index 49c2d78a376a..6e2d89c24f9d 100644
+--- a/drivers/of/property.c
++++ b/drivers/of/property.c
+@@ -1329,6 +1329,8 @@ static struct device_node *parse_gpio_compat(struct device_node *np,
+ 	 */
+ 	if (of_find_property(np, "gpio-hog", NULL))
+ 		return NULL;
++	if (of_find_property(np, "u-boot,gpio-hog", NULL))
++		return NULL;
+
+ 	if (of_parse_phandle_with_args(np, prop_name, "#gpio-cells", index,
+ 				       &sup_args))
+--
+2.17.1
+

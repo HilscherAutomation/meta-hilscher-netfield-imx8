@@ -53,6 +53,8 @@ SRC_URI:append = " file://binfmt_misc.cfg"
 SRC_URI:append = " file://add_st_tpm2_i2c_support.patch \
                    file://tpm_tcg_i2c.cfg"
 
+SRC_URI:append = " file://prevents_error_messages_related_to_u-boot,gpio-hog_DT_properties.patch"
+
 # ------------------------------------------------------------------------------
 export_devicetree_settings() {
 	[ "$1" = "-v" ] && verbose=1
