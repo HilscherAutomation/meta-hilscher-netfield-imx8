@@ -88,7 +88,7 @@ detect_plugged_modules() {
 		   create_gpio $(( 64 + 9 )) "low" "ied-di4o4_o1"
 
 		   # Get gpio base from pca expander
-		   expander_base=$(ls /sys/devices/platform/soc@0/soc@0:bus@30800000/30a50000.i2c/i2c-3/3-0022/gpio/ | sed 's/[^0-9]*//g')
+		   expander_base=$(ls /sys/bus/i2c/devices/3-0022/gpio/ | sed 's/[^0-9]*//g')
 
 		   create_gpio $(( expander_base + 9 ))  "low" "ied-di4o4_o2"
 		   create_gpio $(( expander_base + 10 )) "low" "ied-di4o4_o3"
