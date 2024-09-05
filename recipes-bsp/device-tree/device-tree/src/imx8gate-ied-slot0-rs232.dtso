@@ -6,13 +6,24 @@
 #include "../freescale/imx8mm-pinfunc.h"
 
 / {
-	compatible = "sb-iotgimx8-ied", "sb-iotgimx8", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
-
 	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			regulator-uart2-trm {
+				compatible = "regulator-fixed";
+				regulator-name = "uart2-trm";
+				gpio = <&gpio5 12 GPIO_ACTIVE_LOW>;
+				regulator-always-on;
+				enable-active-low;
+			};
+		};
+	};
+
+	fragment@1 {
 		target = <&uart2>;
 		__overlay__ {
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_uart2>;
+			pinctrl-0 = <&pinctrl_uart2_sb_iotgimx8_ied &pinctrl_uart2_gpio_sb_iotgimx8_ied>;
 			status = "okay";
 		};
 	};

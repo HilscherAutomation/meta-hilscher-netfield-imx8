@@ -1,5 +1,4 @@
 #include "../compulab/sb-iotgimx8.dts"
-/delete-node/ &pinctrl_uart4;
 
 / {
 	model = "netfield-compact-x8m-revx";
@@ -12,19 +11,6 @@
 
 		usb0 = &usbotg1;
 		usb1 = &usbotg2;
-		video0 = &lcdif;
-	};
-
-	clocks {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		clk40m: clk@1 {
-			compatible = "fixed-clock";
-			reg = <1>;
-			#clock-cells = <0>;
-			clock-frequency = <40000000>;
-			clock-output-names = "clk40m";
-		};
 	};
 
 	leds {
@@ -44,19 +30,6 @@
 			default-state = "off";
 		};
 	};
-
-	reg_vusb_5v: regulator-usdhc2 {
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_vbus_gpio>;
-
-		compatible = "regulator-fixed";
-		regulator-name = "VUSB_5V";
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		gpio = <&gpio4 28 GPIO_ACTIVE_HIGH>;
-		regulator-boot-on;
-		enable-active-high;
-	};
 };
 
 &iomuxc {
@@ -67,93 +40,15 @@
 				MX8MM_IOMUXC_SAI5_MCLK_GPIO3_IO25	0x116
 			>;
 		};
+	};
+};
 
-		pinctrl_i2c4: i2c4grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_I2C4_SCL_I2C4_SCL          0x400001c3
-				MX8MM_IOMUXC_I2C4_SDA_I2C4_SDA          0x400001c3
-			>;
-		};
+/* -------------------------------------------------------------------------- */
+// NOTE:
+//   Required fixes of sb-iotgimx8.dts ...
 
-		pinctrl_ecspi2: ecspi2grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_ECSPI2_SCLK_ECSPI2_SCLK    0x02
-				MX8MM_IOMUXC_ECSPI2_MOSI_ECSPI2_MOSI    0x02
-				MX8MM_IOMUXC_ECSPI2_MISO_ECSPI2_MISO    0x102
-			>;
-		};
-
-		pinctrl_ecspi2_cs: ecspi2_csgrp {
-			fsl,pins = <
-				MX8MM_IOMUXC_ECSPI2_SS0_GPIO5_IO13      0x40000
-			>;
-		};
-
-		pinctrl_ecspi3: ecspi3grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_UART1_RXD_ECSPI3_SCLK      0x02
-				MX8MM_IOMUXC_UART1_TXD_ECSPI3_MOSI      0x02
-				MX8MM_IOMUXC_UART2_RXD_ECSPI3_MISO      0x102
-			>;
-		};
-
-		pinctrl_ecspi3_cs: ecspi3_csgrp {
-			fsl,pins = <
-				MX8MM_IOMUXC_UART2_TXD_GPIO5_IO25       0x40000
-			>;
-		};
-
-
-		pinctrl_can0: can0grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_SAI3_TXC_GPIO5_IO0         0x00
-			>;
-		};
-
-		pinctrl_can0_term: can0_termgrp {
-			fsl,pins = <
-				MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8      0x00
-			>;
-		};
-
-		pinctrl_can1: can1grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_UART4_RXD_GPIO5_IO28       0x00
-			>;
-		};
-
-		pinctrl_can1_term: can_term1grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_NAND_DATA03_GPIO3_IO9      0x00
-			>;
-		};
-
-		pinctrl_uart2: uart2grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX     0x140
-				MX8MM_IOMUXC_SAI3_TXFS_UART2_DTE_TX      0x140
-			>;
-		};
-
-		pinctrl_uart4: uart4grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_UART4_RXD_UART4_DCE_RX     0x140
-				MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX     0x140
-			>;
-		};
-
-		pinctrl_tpm0: tpm0grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_SAI3_TXFS_GPIO4_IO31       0x0
-			>;
-		};
-
-		pinctrl_tpm1: tpm1grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_UART4_RXD_GPIO5_IO28       0x0
-			>;
-		};
-
+&iomuxc {
+	sb-iotgimx8 {
 		/* overwrite usdhc2grp setup by sb-iotgimx8.dts, sd-card access with previous setup fails with IO error */
 		pinctrl_usdhc2: usdhc2grp {
 			fsl,pins = <
@@ -169,26 +64,18 @@
 	};
 };
 
-&i2c2 {
-	rtc0: rtc@69 {
-	};
-};
-
-&i2c4 {
-	clock-frequency = <100000>;
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_i2c4>;
-	status = "okay";
-};
-
-// NOTE: u-boot only recognizes "fsl,imx27-usb" which is missing in kernel device-tree
 &usbotg1 {
-	vbus-supply = <&reg_vusb_5v>;
+	/* u-boot only recognizes "fsl,imx27-usb" which is missing in kernel device-tree */
 	compatible = "fsl,imx8mm-usb", "fsl,imx7d-usb", "fsl,imx27-usb";
 };
 
 &usbotg2 {
+	/* u-boot only recognizes "fsl,imx27-usb" which is missing in kernel device-tree */
 	compatible = "fsl,imx8mm-usb", "fsl,imx7d-usb", "fsl,imx27-usb";
+};
+
+&uart4 { /* bluetooth */
+	status = "disabled";
 };
 
 /* -------------------------------------------------------------------------- */
@@ -207,7 +94,7 @@
 	/delete-property/ pinctrl-0;
 
 	/delete-property/ linux,rs485-enabled-at-boot-time;
-	/delete-property/rs485-rts-active-high;
+	/delete-property/ rs485-rts-active-high;
 	/delete-property/ rts-gpios;
 
 	status = "disabled";
@@ -239,28 +126,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-&iomuxc {
-	sb-iotgimx8 {
-		pinctrl_vbus_gpio: pinctrl_vbus_gpio {
-			fsl,pins = <
-				MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28	0x140 /* USB_PS_EN */
-			>;
-		};
-
-		pinctrl_usb9514: usb9514grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_SAI5_RXD3_GPIO3_IO24       0x140 /* HUB_RSTn */
-			>;
-		};
-	};
-};
-
-&snvs_pwrkey {
-	status = "okay";
-};
-
-&uart4 {
-	status = "disabled";
-};
-
-/* -------------------------------------------------------------------------- */
+// Add support for Industrial I/O add-on modules
+#include "netfield-compact-x8m-revx-ied.dtsi"
+#include "netfield-compact-x8m-revx-can.dtsi"
+#include "netfield-compact-x8m-revx-poed.dtsi"

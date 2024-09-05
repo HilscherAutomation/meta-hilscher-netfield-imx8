@@ -6,7 +6,6 @@
 #include "../freescale/imx8mm-pinfunc.h"
 
 / {
-	compatible = "sb-iotgimx8-ied", "sb-iotgimx8", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 	fragment@0 {
 		target-path = "/";
 		__overlay__ {
@@ -14,7 +13,7 @@
 				compatible = "regulator-fixed";
 				regulator-name = "tpm1-rst";
 				regulator-min-microvolt = <3300000>;
-					regulator-max-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
 				gpio = <&gpio4 31 GPIO_ACTIVE_HIGH>;
 				regulator-always-on;
 				enable-active-high;
@@ -22,22 +21,22 @@
 		};
 	};
 
-	fragment@2 {
+	fragment@1 {
 		target = <&ecspi3>;
 		__overlay__ {
 			#address-cells = <1>;
 			#size-cells = <0>;
 			fsl,spi-num-chipselects = <1>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_ecspi3 &pinctrl_ecspi3_cs>;
+			pinctrl-0 = <&pinctrl_ecspi3_sb_iotgimx8_ied &pinctrl_ecspi3_cs_sb_iotgimx8_ied>;
 			cs-gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
 			status = "okay";
 
-			tpm1: tpm@1 {
+			tpm1: tpm@0 {
 				compatible = "infineon,slb9670", "tcg,tpm_tis-spi";
 				reg = <0>;
 				pinctrl-names = "default";
-				pinctrl-0 = <&pinctrl_tpm1>;
+				pinctrl-0 = <&pinctrl_tpm1_sb_iotgimx8_ied>;
 				spi-max-frequency = <5000000>;
 				status = "okay";
 			};
