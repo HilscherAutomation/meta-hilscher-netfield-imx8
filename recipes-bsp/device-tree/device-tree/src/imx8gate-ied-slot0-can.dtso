@@ -6,8 +6,6 @@
 #include "../freescale/imx8mm-pinfunc.h"
 
 / {
-	compatible = "sb-iotgimx8-ied", "sb-iotgimx8", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
-
 	fragment@0 {
 		target = <&ecspi2>;
 		__overlay__ {
@@ -15,15 +13,16 @@
 			#size-cells = <0>;
 			fsl,spi-num-chipselects = <1>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs>;
+			pinctrl-0 = <&pinctrl_ecspi2_sb_iotgimx8_ied &pinctrl_ecspi2_cs_sb_iotgimx8_ied>;
 			cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
 			status = "okay";
 
 			can0: can@0 {
 				compatible = "microchip,mcp2518fd";
 				reg = <0>;
+				microchip,rx-int = <&gpio4 31 IRQ_TYPE_LEVEL_LOW>;
 				pinctrl-names = "default";
-				pinctrl-0 = <&pinctrl_can0>;
+				pinctrl-0 = <&pinctrl_can0_sb_iotgimx8_ied>;
 				interrupt-parent = <&gpio5>;
 				interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
 				spi-max-frequency = <20000000>;

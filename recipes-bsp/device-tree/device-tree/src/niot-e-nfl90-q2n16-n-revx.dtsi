@@ -360,7 +360,7 @@
 	>;
 
 	spi2_0: netx90_spm@0 {
-		compatible = "spidev";
+		compatible = "rohm,dh2228fv"; // Use fake device to enable spidev!
 		reg = <0>;
 		spi-max-frequency = <125000000>;
 	};
@@ -377,8 +377,8 @@
 	>;
 
 	spi3_0: can@0 {
-// 		compatible = "microchip,mcp2515";
-		compatible = "spidev";
+// 		compatible = "microchip,mcp2515"; // NOTE: This chip may be unpopulated because the SPI interface is used for the netx90 (Development-Board).
+		compatible = "rohm,dh2228fv"; // Use fake device to enable spidev!
 		reg = <0>;
 		spi-max-frequency = <25000000>;
 	};

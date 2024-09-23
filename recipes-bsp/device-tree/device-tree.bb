@@ -88,6 +88,9 @@ SRC_URI:append:netfield-iolink-edge-gw-rev2 = " \
 COMPATIBLE_MACHINE:netfield-compact-x8m-revx = ".*"
 DTS_BASE:netfield-compact-x8m-revx += " \
 	file://src/netfield-compact-x8m-revx.dtsi \
+	file://src/netfield-compact-x8m-revx-ied.dtsi \
+	file://src/netfield-compact-x8m-revx-can.dtsi \
+	file://src/netfield-compact-x8m-revx-poed.dtsi \
 "
 
 SRC_URI:append:netfield-compact-x8m-rev1 = " \

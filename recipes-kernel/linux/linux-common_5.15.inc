@@ -43,14 +43,17 @@ SRC_URI:append = " \
 	file://tpm.cfg \
 	file://led_timer.cfg \
 	file://usb.cfg \
+	file://enable_abx80x.cfg \
 "
 
 # Enable module for qemu support
 SRC_URI:append = " file://binfmt_misc.cfg"
 
 # TPM2.0 via I2C support
-SRC_URI:append = " file://add_st_tpm2_i2c_support.patch;patchdir=drivers/char/tpm \
+SRC_URI:append = " file://add_st_tpm2_i2c_support.patch \
                    file://tpm_tcg_i2c.cfg"
+
+SRC_URI:append = " file://prevents_error_messages_related_to_u-boot,gpio-hog_DT_properties.patch"
 
 # ------------------------------------------------------------------------------
 export_devicetree_settings() {

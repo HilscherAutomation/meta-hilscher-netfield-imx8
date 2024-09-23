@@ -6,11 +6,10 @@
 #include "../freescale/imx8mm-pinfunc.h"
 
 / {
-	compatible = "sb-iotgimx8-ied", "sb-iotgimx8", "cpl,ucm-imx8m-mini", "fsl,imx8mm";
 	fragment@0 {
 		target-path = "/";
 		__overlay__ {
-			vref_adc1: regulator-vref-adc1 {
+			vref_adc: regulator-vref-adc {
 				compatible = "regulator-fixed";
 				regulator-name = "vref_adc";
 				regulator-min-microvolt = <2400000>;
@@ -27,14 +26,14 @@
 			#size-cells = <0>;
 			fsl,spi-num-chipselects = <1>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_ecspi3 &pinctrl_ecspi3_cs>;
+			pinctrl-0 = <&pinctrl_ecspi3_sb_iotgimx8_ied &pinctrl_ecspi3_cs_sb_iotgimx8_ied>;
 			cs-gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
 			status = "okay";
 
 			adc1: adc@0 {
 				compatible = "maxim,max11108";
 				reg = <0>;
-				vref-supply = <&vref_adc1>;
+				vref-supply = <&vref_adc>;
 				spi-max-frequency = <20000000>;
 				status = "okay";
 			};

@@ -11,6 +11,7 @@ SRCREV_meta = "a9112e1b2552a7b037b2f90699505e7c1e4d6a34"
 SRCREV_FORMAT = "meta_${@d.getVar('SRCREV', True)[:10]}"
 
 LINUX_VERSION="5.15.162"
+LOCALVERSION=""
 # Update kernel via patch, as it is not yet available mainline
 SRC_URI:append = " file://linux-5.15.158-to-162.patch"
 addtask do_kernel_version_sanity_check after do_patch

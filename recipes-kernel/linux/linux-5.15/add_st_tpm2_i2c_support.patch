@@ -1,14 +1,29 @@
-Patch for ST TPM chips using i2c protocol (for kernel before 6.1)
+From daafb18ab71255a5eac4317e7f36b3b0853b509e Mon Sep 17 00:00:00 2001
+From: Frank Meisenbach <fmeisenbach@hilscher.com>
+Date: Wed, 28 Aug 2024 09:23:50 +0000
+Subject: [PATCH] Add st_tpm2_i2c support
 
-See https://github.com/STMicroelectronics/TCG-TPM-I2C-DRV/blob/5.10.y/patchTPMv_5_10_1.patch
+    Original: https://github.com/STMicroelectronics/TCG-TPM-I2C-DRV/blob/5.10.y/patchTPMv_5_10_1.patch
 
-diff -Nur tpm/Kconfig tpm_patch/Kconfig
---- tpm/Kconfig	2022-05-09 21:04:10.112204295 +0200
-+++ tpm_patch/Kconfig	2022-05-09 18:26:07.510129189 +0200
-@@ -86,6 +86,19 @@
- 	  To compile this driver as a module, choose  M here;
- 	  the module will be called tpm_tis_synquacer.
- 
+    This patch has been modified manually to get it applied to kernel 5.15.162!
+---
+ drivers/char/tpm/Kconfig         |  13 ++
+ drivers/char/tpm/Makefile        |   1 +
+ drivers/char/tpm/tpm-interface.c |  17 +-
+ drivers/char/tpm/tpm_tis_core.c  | 186 +++++++++++++-------
+ drivers/char/tpm/tpm_tis_core.h  |  41 ++++-
+ drivers/char/tpm/tpm_tis_i2c.c   | 288 +++++++++++++++++++++++++++++++
+ 6 files changed, 477 insertions(+), 69 deletions(-)
+ create mode 100644 drivers/char/tpm/tpm_tis_i2c.c
+
+diff --git a/drivers/char/tpm/Kconfig b/drivers/char/tpm/Kconfig
+index d6ba644f6b00..7ccd0d762d83 100644
+--- a/drivers/char/tpm/Kconfig
++++ b/drivers/char/tpm/Kconfig
+@@ -95,6 +95,19 @@ config TCG_TIS_I2C_CR50
+ 	  to handle the limitations of the hardware.  To compile this driver
+ 	  as a module, choose M here; the module will be called tcg_tis_i2c_cr50.
+
 +config TCG_TIS_I2C
 +	tristate "TPM I2C Interface Specification"
 +	depends on I2C
@@ -25,33 +40,35 @@ diff -Nur tpm/Kconfig tpm_patch/Kconfig
  config TCG_TIS_I2C_ATMEL
  	tristate "TPM Interface Specification 1.2 Interface (I2C - Atmel)"
  	depends on I2C
-diff -Nur tpm/Makefile tpm_patch/Makefile
---- tpm/Makefile	2022-05-09 21:04:10.112204295 +0200
-+++ tpm_patch/Makefile	2022-05-04 16:50:30.866716461 +0200
-@@ -24,6 +24,7 @@
+diff --git a/drivers/char/tpm/Makefile b/drivers/char/tpm/Makefile
+index 66d39ea6bd10..3c69b8402291 100644
+--- a/drivers/char/tpm/Makefile
++++ b/drivers/char/tpm/Makefile
+@@ -24,6 +24,7 @@ obj-$(CONFIG_TCG_TIS) += tpm_tis.o
  obj-$(CONFIG_TCG_TIS_SYNQUACER) += tpm_tis_synquacer.o
- 
+
  obj-$(CONFIG_TCG_TIS_SPI) += tpm_tis_spi.o
 +obj-$(CONFIG_TCG_TIS_I2C) += tpm_tis_i2c.o
  tpm_tis_spi-y := tpm_tis_spi_main.o
  tpm_tis_spi-$(CONFIG_TCG_TIS_SPI_CR50) += tpm_tis_spi_cr50.o
- 
-diff -Nur tpm/tpm-interface.c tpm_patch/tpm-interface.c
---- tpm/tpm-interface.c	2022-05-09 21:04:10.112204295 +0200
-+++ tpm_patch/tpm-interface.c	2022-05-04 16:50:30.876716323 +0200
-@@ -64,6 +64,8 @@
+
+diff --git a/drivers/char/tpm/tpm-interface.c b/drivers/char/tpm/tpm-interface.c
+index d69905233aff..def45474fdeb 100644
+--- a/drivers/char/tpm/tpm-interface.c
++++ b/drivers/char/tpm/tpm-interface.c
+@@ -64,6 +64,8 @@ static ssize_t tpm_try_transmit(struct tpm_chip *chip, void *buf, size_t bufsiz)
  	int rc;
  	ssize_t len = 0;
  	u32 count, ordinal;
 +	//change ST@2020.10.29
 +	unsigned int delay_msec = TPM_TIMEOUT_POLL;
  	unsigned long stop;
- 
+
  	if (bufsiz < TPM_HEADER_SIZE)
-@@ -114,7 +116,10 @@
+@@ -114,7 +116,10 @@ static ssize_t tpm_try_transmit(struct tpm_chip *chip, void *buf, size_t bufsiz)
  			return -ECANCELED;
  		}
- 
+
 -		tpm_msleep(TPM_TIMEOUT_POLL);
 +		//change ST@2020.10.29
 +		//tpm_msleep(TPM_TIMEOUT_POLL);
@@ -59,8 +76,8 @@ diff -Nur tpm/tpm-interface.c tpm_patch/tpm-interface.c
 +		delay_msec = delay_msec+delay_msec;
  		rmb();
  	} while (time_before(jiffies, stop));
- 
-@@ -157,6 +162,7 @@
+
+@@ -157,6 +162,7 @@ ssize_t tpm_transmit(struct tpm_chip *chip, u8 *buf, size_t bufsiz)
  	u8 save[TPM_HEADER_SIZE + 3*sizeof(u32)];
  	unsigned int delay_msec = TPM2_DURATION_SHORT;
  	u32 rc = 0;
@@ -68,7 +85,7 @@ diff -Nur tpm/tpm-interface.c tpm_patch/tpm-interface.c
  	ssize_t ret;
  	const size_t save_size = min(sizeof(save), bufsiz);
  	/* the command code is where the return code will be */
-@@ -172,7 +178,13 @@
+@@ -172,7 +178,13 @@ ssize_t tpm_transmit(struct tpm_chip *chip, u8 *buf, size_t bufsiz)
  	for (;;) {
  		ret = tpm_try_transmit(chip, buf, bufsiz);
  		if (ret < 0)
@@ -83,21 +100,22 @@ diff -Nur tpm/tpm-interface.c tpm_patch/tpm-interface.c
  		rc = be32_to_cpu(header->return_code);
  		if (rc != TPM2_RC_RETRY && rc != TPM2_RC_TESTING)
  			break;
-@@ -194,6 +206,7 @@
+@@ -194,6 +206,7 @@ ssize_t tpm_transmit(struct tpm_chip *chip, u8 *buf, size_t bufsiz)
  		tpm_msleep(delay_msec);
  		delay_msec *= 2;
  		memcpy(buf, save, save_size);
-+		}	
++		}
  	}
  	return ret;
  }
-diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
---- tpm/tpm_tis_core.c	2022-05-09 21:04:10.122204140 +0200
-+++ tpm_patch/tpm_tis_core.c	2022-05-09 18:25:17.170886401 +0200
-@@ -91,6 +91,53 @@
+diff --git a/drivers/char/tpm/tpm_tis_core.c b/drivers/char/tpm/tpm_tis_core.c
+index b3452259d6e0..a6007ba84207 100644
+--- a/drivers/char/tpm/tpm_tis_core.c
++++ b/drivers/char/tpm/tpm_tis_core.c
+@@ -91,6 +91,53 @@ static int wait_for_tpm_stat(struct tpm_chip *chip, u8 mask,
  	return -ETIME;
  }
- 
+
 +static int wait_for_tpm_stat_result (struct tpm_chip *chip, u8 mask ,u8 mask_result
 +,unsigned long timeout, wait_queue_head_t *queue,	bool check_cancel)
 +{
@@ -107,10 +125,10 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
 +	bool canceled = false;
 +	/* check current status */
 +	status = chip->ops->status(chip);
-+	
-+	if ((status & mask) == mask_result)		
++
++	if ((status & mask) == mask_result)
 +					return 0;
-+					
++
 +	stop = jiffies + timeout;
 +
 +	if (chip->flags & TPM_CHIP_FLAG_IRQ) {
@@ -136,10 +154,10 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
 +			usleep_range(TPM_TIMEOUT_USECS_MIN,
 +				     TPM_TIMEOUT_USECS_MAX);
 +			status = chip->ops->status(chip);
-+			
-+			if ((status & mask) == mask_result)		
++
++			if ((status & mask) == mask_result)
 +					return 0;
-+			
++
 +		} while (time_before(jiffies, stop));
 +	}
 +	return -ETIME;
@@ -148,11 +166,11 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
  /* Before we attempt to access the TPM we must see that the valid bit is set.
   * The specification says that this bit is 0 at reset and remains 0 until the
   * 'TPM has gone through its self test and initialization and has established
-@@ -221,6 +268,16 @@
+@@ -246,6 +293,16 @@ static u8 tpm_tis_status(struct tpm_chip *chip)
  	return status;
  }
- 
-+static bool tpm_tis_check_data(struct tpm_chip *chip, const u8 *buf, 
+
++static bool tpm_tis_check_data(struct tpm_chip *chip, const u8 *buf,
 +size_t len) {
 +	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
 +
@@ -165,7 +183,7 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
  static void tpm_tis_ready(struct tpm_chip *chip)
  {
  	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
-@@ -287,14 +344,16 @@
+@@ -312,8 +369,9 @@ static int tpm_tis_recv(struct tpm_chip *chip, u8 *buf, size_t count)
  {
  	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
  	int size = 0;
@@ -173,25 +191,65 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
 +	int status,i;
  	u32 expected;
 +	bool check_data = false;
- 
--	if (count < TPM_HEADER_SIZE) {
+ 	int rc;
+
+ 	if (count < TPM_HEADER_SIZE) {
+@@ -321,42 +379,54 @@ static int tpm_tis_recv(struct tpm_chip *chip, u8 *buf, size_t count)
+ 		goto out;
+ 	}
+
+-	size = recv_data(chip, buf, TPM_HEADER_SIZE);
+-	/* read first 10 bytes, including tag, paramsize, and result */
+-	if (size < TPM_HEADER_SIZE) {
+-		dev_err(&chip->dev, "Unable to read header\n");
+-		goto out;
+-	}
++	for (i = 0; i < TPM_RETRY; i++)
++	{
++		size = recv_data(chip, buf, TPM_HEADER_SIZE);
++		/* read first 10 bytes, including tag, paramsize, and result */
++		if (size < TPM_HEADER_SIZE) {
++			dev_err(&chip->dev, "Unable to read header\n");
++			size = -EIO;
++			continue;
++		}
+
+-	expected = be32_to_cpu(*(__be32 *) (buf + 2));
+-	if (expected > count || expected < TPM_HEADER_SIZE) {
 -		size = -EIO;
 -		goto out;
 -	}
--
-+	for (i = 0; i < TPM_RETRY; i++) 
-+	{
-+		if (count < TPM_HEADER_SIZE) {
++		expected = be32_to_cpu(*(__be32 *) (buf + 2));
++		if (expected > count || expected < TPM_HEADER_SIZE) {
 +			size = -EIO;
-+			goto out;
++			continue;
 +		}
- 	size = recv_data(chip, buf, TPM_HEADER_SIZE);
- 	/* read first 10 bytes, including tag, paramsize, and result */
- 	if (size < TPM_HEADER_SIZE) {
-@@ -317,17 +376,28 @@
- 	}
- 
- 	if (wait_for_tpm_stat(chip, TPM_STS_VALID, chip->timeout_c,
+
+-	rc = recv_data(chip, &buf[TPM_HEADER_SIZE],
++		rc = recv_data(chip, &buf[TPM_HEADER_SIZE],
+ 		       expected - TPM_HEADER_SIZE);
+-	if (rc < 0) {
+-		size = rc;
+-		goto out;
+-	}
+-	size += rc;
+-	if (size < expected) {
+-		dev_err(&chip->dev, "Unable to read remainder of result\n");
+-		size = -ETIME;
+-		goto out;
+-	}
++		if (rc < 0) {
++			size = rc;
++			continue;
++		}
++		size += rc;
++		if (size < expected) {
++			dev_err(&chip->dev, "Unable to read remainder of result\n");
++			size = -ETIME;
++			continue;
++		}
+
+-	if (wait_for_tpm_stat(chip, TPM_STS_VALID, chip->timeout_c,
 -				&priv->int_queue, false) < 0) {
 -		size = -ETIME;
 -		goto out;
@@ -201,50 +259,47 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
 -		dev_err(&chip->dev, "Error left over data\n");
 -		size = -EIO;
 -		goto out;
-+				      &priv->int_queue, false) < 0) {
-+			size = -ETIME;
-+			goto out;
++		if (wait_for_tpm_stat(chip, TPM_STS_VALID, chip->timeout_c,
++						&priv->int_queue, false) < 0) {
++				size = -ETIME;
++				continue;
 +		}
 +
 +		status = tpm_tis_status(chip);
 +		if (status & TPM_STS_DATA_AVAIL) {	/* retry? */
 +			dev_err(&chip->dev, "Error left over data\n");
 +			size = -EIO;
-+			goto out;
++			continue;
 +		}
 +
 +		check_data = tpm_tis_check_data(chip, buf, size);
-+		if (!check_data)
-+			tpm_tis_write8(priv, TPM_STS(priv->locality),
-+				       TPM_STS_RESPONSE_RETRY);
++		if (!check_data) {
++			tpm_tis_write8(priv, TPM_STS(priv->locality), TPM_STS_RESPONSE_RETRY);
++			size = -EIO;
++		}
 +		else break;
  	}
- 
-+		if (!check_data)
-+		 size = -EIO;
-+
+
  out:
- 	tpm_tis_ready(chip);
- 	return size;
-@@ -343,7 +413,7 @@
+@@ -374,7 +444,7 @@ static int tpm_tis_send_data(struct tpm_chip *chip, const u8 *buf, size_t len)
  	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
  	int rc, status, burstcnt;
  	size_t count = 0;
 -	bool itpm = priv->flags & TPM_TIS_ITPM_WORKAROUND;
-+	
- 
++
+
  	status = tpm_tis_status(chip);
  	if ((status & TPM_STS_COMMAND_READY) == 0) {
-@@ -370,35 +440,27 @@
+@@ -401,35 +471,27 @@ static int tpm_tis_send_data(struct tpm_chip *chip, const u8 *buf, size_t len)
  			goto out_err;
- 
+
  		count += burstcnt;
 +        if (wait_for_tpm_stat_result (chip, TPM_STS_VALID | TPM_STS_DATA_EXPECT,TPM_STS_VALID | TPM_STS_DATA_EXPECT, chip->timeout_c,
 +				&priv->int_queue, false) < 0) {
 +		rc = -ETIME;
 +		goto out_err;
 +	    }
- 
+
 -		if (wait_for_tpm_stat(chip, TPM_STS_VALID, chip->timeout_c,
 -					&priv->int_queue, false) < 0) {
 -			rc = -ETIME;
@@ -256,12 +311,13 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
 -			goto out_err;
 -		}
  	}
- 
+
  	/* write last byte */
  	rc = tpm_tis_write8(priv, TPM_DATA_FIFO(priv->locality), buf[count]);
--	if (rc < 0)
--		goto out_err;
- 
++
+ 	if (rc < 0)
+ 		goto out_err;
+
 -	if (wait_for_tpm_stat(chip, TPM_STS_VALID, chip->timeout_c,
 -				&priv->int_queue, false) < 0) {
 -		rc = -ETIME;
@@ -270,52 +326,32 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
 -	status = tpm_tis_status(chip);
 -	if (!itpm && (status & TPM_STS_DATA_EXPECT) != 0) {
 -		rc = -EIO;
-+	if (rc < 0)
- 		goto out_err;
-+		
+-		goto out_err;
 +	if (wait_for_tpm_stat_result(chip, TPM_STS_VALID | TPM_STS_DATA_EXPECT, TPM_STS_VALID , chip->timeout_a,
 +					&priv->int_queue, false) < 0) {
 +			rc = -ETIME;
 +			goto out_err;
  	}
- 
+
 +
  	return 0;
- 
+
  out_err:
-@@ -435,15 +497,25 @@
- static int tpm_tis_send_main(struct tpm_chip *chip, const u8 *buf, size_t len)
- {
- 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
--	int rc;
-+	int rc,i;
- 	u32 ordinal;
- 	unsigned long dur;
--
--	rc = tpm_tis_send_data(chip, buf, len);
--	if (rc < 0)
--		return rc;
-+	bool data_valid = false;
-+	
-+	//rc = tpm_tis_send_data(chip, buf, len);
-+	//if (rc < 0)
-+	//	return rc;
- 
- 	/* go and do it */
-+	for (i = 0; i < TPM_RETRY && !data_valid; i++) {
-+		rc = tpm_tis_send_data(chip, buf, len);
-+		if (rc < 0)
-+			return rc;
-+		data_valid = tpm_tis_check_data(chip, buf, len);
-+	}
-+	if (!data_valid)
+@@ -481,6 +543,12 @@ static int tpm_tis_send_main(struct tpm_chip *chip, const u8 *buf, size_t len)
+ 			return rc;
+ 	}
+
++	if (rc < 0)
++		return rc;
++
++	if (!tpm_tis_check_data(chip, buf, len))
 +		return -EIO;
-+	
++
+ 	/* go and do it */
  	rc = tpm_tis_write8(priv, TPM_STS(priv->locality), TPM_STS_GO);
  	if (rc < 0)
- 		goto out_err;
-@@ -666,17 +738,7 @@
- 
+@@ -704,17 +772,7 @@ static int probe_itpm(struct tpm_chip *chip)
+
  static bool tpm_tis_req_canceled(struct tpm_chip *chip, u8 status)
  {
 -	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
@@ -331,28 +367,29 @@ diff -Nur tpm/tpm_tis_core.c tpm_patch/tpm_tis_core.c
 -	}
 +	return ((status & TPM_STS_COMMAND_READY) == TPM_STS_COMMAND_READY);
  }
- 
+
  static irqreturn_t tis_int_handler(int dummy, void *dev_id)
-diff -Nur tpm/tpm_tis_core.h tpm_patch/tpm_tis_core.h
---- tpm/tpm_tis_core.h	2022-05-09 21:04:10.122204140 +0200
-+++ tpm_patch/tpm_tis_core.h	2022-05-04 16:50:30.876716323 +0200
-@@ -34,6 +34,7 @@
+diff --git a/drivers/char/tpm/tpm_tis_core.h b/drivers/char/tpm/tpm_tis_core.h
+index 464ed352ab2e..6c2c9623c140 100644
+--- a/drivers/char/tpm/tpm_tis_core.h
++++ b/drivers/char/tpm/tpm_tis_core.h
+@@ -34,6 +34,7 @@ enum tis_status {
  	TPM_STS_GO = 0x20,
  	TPM_STS_DATA_AVAIL = 0x10,
  	TPM_STS_DATA_EXPECT = 0x08,
 +	TPM_STS_RESPONSE_RETRY = 0x02,
  	TPM_STS_READ_ZERO = 0x23, /* bits that must be zero on read */
  };
- 
-@@ -112,6 +113,7 @@
+
+@@ -114,6 +115,7 @@ struct tpm_tis_phy_ops {
  	int (*read16)(struct tpm_tis_data *data, u32 addr, u16 *result);
  	int (*read32)(struct tpm_tis_data *data, u32 addr, u32 *result);
  	int (*write32)(struct tpm_tis_data *data, u32 addr, u32 src);
 +    bool (*check_data)(struct tpm_tis_data *data, const u8 *buf, size_t len);
  };
- 
+
  static inline int tpm_tis_read_bytes(struct tpm_tis_data *data, u32 addr,
-@@ -128,19 +130,42 @@
+@@ -130,19 +132,42 @@ static inline int tpm_tis_read8(struct tpm_tis_data *data, u32 addr, u8 *result)
  static inline int tpm_tis_read16(struct tpm_tis_data *data, u32 addr,
  				 u16 *result)
  {
@@ -370,7 +407,7 @@ diff -Nur tpm/tpm_tis_core.h tpm_patch/tpm_tis_core.h
 +
 +	return rc;
  }
- 
+
  static inline int tpm_tis_read32(struct tpm_tis_data *data, u32 addr,
  				 u32 *result)
  {
@@ -388,16 +425,16 @@ diff -Nur tpm/tpm_tis_core.h tpm_patch/tpm_tis_core.h
 +
 +	return rc;
  }
- 
+
  static inline int tpm_tis_write_bytes(struct tpm_tis_data *data, u32 addr,
  				      u16 len, const u8 *value)
  {
  	return data->phy_ops->write_bytes(data, addr, len, value);
 +
  }
- 
+
  static inline int tpm_tis_write8(struct tpm_tis_data *data, u32 addr, u8 value)
-@@ -151,7 +176,17 @@
+@@ -153,7 +178,17 @@ static inline int tpm_tis_write8(struct tpm_tis_data *data, u32 addr, u8 value)
  static inline int tpm_tis_write32(struct tpm_tis_data *data, u32 addr,
  				  u32 value)
  {
@@ -414,11 +451,13 @@ diff -Nur tpm/tpm_tis_core.h tpm_patch/tpm_tis_core.h
 +
 +	return rc;
  }
- 
+
  static inline bool is_bsw(void)
-diff -Nur tpm/tpm_tis_i2c.c tpm_patch/tpm_tis_i2c.c
---- tpm/tpm_tis_i2c.c	1970-01-01 01:00:00.000000000 +0100
-+++ tpm_patch/tpm_tis_i2c.c	2022-05-04 16:50:30.886716185 +0200
+diff --git a/drivers/char/tpm/tpm_tis_i2c.c b/drivers/char/tpm/tpm_tis_i2c.c
+new file mode 100644
+index 000000000000..91b45cfeef1d
+--- /dev/null
++++ b/drivers/char/tpm/tpm_tis_i2c.c
 @@ -0,0 +1,288 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -429,7 +468,7 @@ diff -Nur tpm/tpm_tis_i2c.c tpm_patch/tpm_tis_i2c.c
 + *
 + * TPM TIS I2C Device Driver Interface for devices that implement the TPM I2C
 + * Interface defined by TCG PC Client Platform TPM Profile (PTP) Specification
-+ * Revision 01.03 v22 at www.trustedcomputinggroup.org 
++ * Revision 01.03 v22 at www.trustedcomputinggroup.org
 + */
 +
 +#include <linux/init.h>
@@ -466,7 +505,7 @@ diff -Nur tpm/tpm_tis_i2c.c tpm_patch/tpm_tis_i2c.c
 +	u8 *iobuf;
 +};
 +
-+static inline struct tpm_tis_i2c_phy *to_tpm_tis_i2c_phy(struct 
++static inline struct tpm_tis_i2c_phy *to_tpm_tis_i2c_phy(struct
 +tpm_tis_data *data) {
 +	return container_of(data, struct tpm_tis_i2c_phy, priv); }
 +
@@ -516,11 +555,11 @@ diff -Nur tpm/tpm_tis_i2c.c tpm_patch/tpm_tis_i2c.c
 +	usleep_range(250, 300); // wait default GUARD_TIME of 250µs
 +
 +	} while(ret < 0 && i++ < TPM_RETRY );
-+	
++
 +	if (ret < 0)
 +		return ret;
 +
-+	
++
 +
 +	return 0;
 +}
@@ -706,5 +745,8 @@ diff -Nur tpm/tpm_tis_i2c.c tpm_patch/tpm_tis_i2c.c
 +
 +module_i2c_driver(tpm_tis_i2c_driver);
 +
-+MODULE_DESCRIPTION("TPM Driver for native I2C access"); 
++MODULE_DESCRIPTION("TPM Driver for native I2C access");
 +MODULE_LICENSE("GPL");
+--
+2.17.1
+

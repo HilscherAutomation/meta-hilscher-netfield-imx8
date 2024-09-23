@@ -57,15 +57,9 @@
 			linux,default-trigger = "none";
 			default-state = "off";
 		};
-		apl_green {
-			label = "apl_green";
+		wlan_blue {
+			label = "wlan_blue";
 			gpios = <&gpio2 20 GPIO_ACTIVE_LOW>;
-			linux,default-trigger = "none";
-			default-state = "off";
-		};
-		apl_red {
-			label = "apl_red";
-			gpios = <&gpio2 19 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "none";
 			default-state = "off";
 		};
@@ -116,6 +110,7 @@
 
 		pinctrl_gpio1: gpio1grp {
 			fsl,pins = <
+				MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6  (PU|IS) // RECOVERY#
 				MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11 (PD|IS) // PGOOD_3V3
 				MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8  (PD|IS) // TPM_IRQ#
 				MX8MM_IOMUXC_GPIO1_IO13_GPIO1_IO13 (PU|IS) // TPM_GPIO
@@ -197,14 +192,22 @@
 };
 
 &gpio1 {
-	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpio1>;
 	gpio-line-names =
-		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "TPM_IRQ#", "N/C",
+		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "RECOVERY#", "N/C", "TPM_IRQ#", "N/C",
 		"N/C", "PGOOD_3V3", "N/C", "TPM_GPIO", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
 		"N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C",
 		"N/C", "N/C";
+
+	/* setup gpio for u-boot menu control */
+	u-boot-ctrl-gpio {
+		/* using "u-boot,gpio-hog" allows exporting under linux */
+		u-boot,gpio-hog;
+		gpios = <6 GPIO_ACTIVE_LOW>;
+		input;
+		line-name = "menu-ctrl-gpio";
+	};
 };
 
 &gpio2 {
@@ -255,7 +258,7 @@
 	status = "disabled";
 };
 
-&uart2 { /* Prepared for Bluetooth */
+&uart2 {
 	status = "disabled";
 };
 
@@ -267,21 +270,8 @@
 	status = "disabled";
 };
 
-&ecspi1 { /* TPM */
-	status = "okay";
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_ecspi1>;
-	num-cs = <1>;
-
-	cs-gpios = <
-		&gpio5 9 GPIO_ACTIVE_LOW
-	>;
-
-	spi1_0: tpm@0 {
-		compatible = "tcg,tpm_tis-spi", "infineon,slb9670";
-		reg = <0>;
-		spi-max-frequency = <10000000>;
-	};
+&ecspi1 {
+	status = "disabled";
 };
 
 &ecspi2 {
@@ -299,7 +289,7 @@
 	>;
 
 	spi3_0: netx90_spm@0 {
-		compatible = "spidev";
+		compatible = "rohm,dh2228fv"; // Use fake device to enable spidev!
 		reg = <0>;
 		spi-max-frequency = <125000000>;
 	};
@@ -317,6 +307,11 @@
 		reg = <0x51>;
 		pagesize = <1024>;
 	};
+	eprom@52 {
+		compatible = "24c64";
+		reg = <0x52>;
+		pagesize = <32>;
+	};
 };
 
 &i2c2 { /* SOM: PMIC, RTC, EEprom*/
@@ -331,7 +326,17 @@
 };
 
 &i2c4 {
-	status = "disabled";
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c4>;
+
+	clock-frequency = <400000>;
+
+	/* TPM */
+	st33htpi: st33htpi@2e {
+		compatible = "st,st33htpm-i2c";
+		reg = <0x2e>;
+	};
 };
 
 &usdhc1 { /* SOM: WLAN/Bluetooth */
@@ -361,6 +366,7 @@
 &ethphy0 {
 	/delete-property/ at803x,eee-okay;
 	at803x,eee-disabled;
+	max-speed = <100>;
 };
 
 &snvs {

@@ -1,0 +1,143 @@
+/* -------------------------------------------------------------------------- */
+// NOTE:
+//   Common to all Industrial I/O add-on modules
+
+/ {
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clk40m: clk@1 {
+			compatible = "fixed-clock";
+			reg = <1>;
+			#clock-cells = <0>;
+			clock-frequency = <40000000>;
+			clock-output-names = "clk40m";
+		};
+	};
+};
+
+&i2c4 {
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c4_sb_iotgimx8_ied>;
+	status = "okay";
+
+	// NOTE: The device nodes pca9555@22 and eeprom@54 (module detection) are created manually by platform_init script.
+};
+
+/* -------------------------------------------------------------------------- */
+// NOTE:
+//   Required by the Industrial I/O add-on modules (see: sb-iotgimx8-ied.dts).
+//   The add-on modules themselves are activated via dt overlays.
+
+&uart4 { /* bluetooth */
+	status = "disabled";
+	/delete-property/ uart-has-rtscts;
+	/delete-node/ bluetooth;
+};
+
+&iomuxc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_hog_sb_iotgimx8_ied>;
+
+	sb-iotgimx8-ied {
+		pinctrl_hog_sb_iotgimx8_ied: hoggrp-sb-iotgimx8-ied {
+			fsl,pins = <
+				/* IED-DI4O4 */
+				MX8MM_IOMUXC_NAND_ALE_GPIO3_IO0		0x100 /* IN 0 */
+				MX8MM_IOMUXC_NAND_CE0_B_GPIO3_IO1	0x100 /* IN 1 */
+				MX8MM_IOMUXC_NAND_DATA00_GPIO3_IO6	0x100 /* IN 2 */
+				MX8MM_IOMUXC_NAND_DATA01_GPIO3_IO7	0x100 /* IN 3 */
+				MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8	0x100 /* OUT 0 */
+				MX8MM_IOMUXC_NAND_DATA03_GPIO3_IO9	0x100 /* OUT 1 */
+			>;
+		};
+
+		pinctrl_i2c4_sb_iotgimx8_ied: i2c4grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_I2C4_SCL_I2C4_SCL		0x400001c3
+				MX8MM_IOMUXC_I2C4_SDA_I2C4_SDA		0x400001c3
+			>;
+		};
+
+		pinctrl_uart2_sb_iotgimx8_ied: uart2grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX	0x140
+				MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX	0x140
+			>;
+		};
+
+		pinctrl_uart2_gpio_sb_iotgimx8_ied: uart2_cs_grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_ECSPI2_MISO_GPIO5_IO12	0x00
+			>;
+		};
+
+		pinctrl_uart4_sb_iotgimx8_ied: uart4grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART4_RXD_UART4_DCE_RX	0x140
+				MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX	0x140
+			>;
+		};
+
+		pinctrl_uart4_gpio_sb_iotgimx8_ied: uart4_cs_grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART2_RXD_GPIO5_IO24	0x00
+			>;
+		};
+
+		pinctrl_ecspi2_sb_iotgimx8_ied: ecspi2grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_ECSPI2_SCLK_ECSPI2_SCLK	0x02
+				MX8MM_IOMUXC_ECSPI2_MOSI_ECSPI2_MOSI	0x02
+				MX8MM_IOMUXC_ECSPI2_MISO_ECSPI2_MISO	0x102
+			>;
+		};
+
+		pinctrl_ecspi2_cs_sb_iotgimx8_ied: ecspi2_csgrp {
+			fsl,pins = <
+				MX8MM_IOMUXC_ECSPI2_SS0_GPIO5_IO13	0x40000
+			>;
+		};
+
+		pinctrl_ecspi3_sb_iotgimx8_ied: ecspi3grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART1_RXD_ECSPI3_SCLK	0x02
+				MX8MM_IOMUXC_UART1_TXD_ECSPI3_MOSI	0x02
+				MX8MM_IOMUXC_UART2_RXD_ECSPI3_MISO	0x102
+			>;
+		};
+
+		pinctrl_ecspi3_cs_sb_iotgimx8_ied: ecspi3_csgrp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART2_TXD_GPIO5_IO25	0x40000
+			>;
+		};
+
+		pinctrl_can0_sb_iotgimx8_ied: can0grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI3_TXC_GPIO5_IO0		0x00
+				MX8MM_IOMUXC_SAI3_TXFS_GPIO4_IO31       0x00
+			>;
+		};
+
+		pinctrl_can1_sb_iotgimx8_ied: can1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART4_TXD_GPIO5_IO29	0x00
+				MX8MM_IOMUXC_UART4_RXD_GPIO5_IO28	0x00
+			>;
+		};
+
+		pinctrl_tpm0_sb_iotgimx8_ied: tpm0grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI3_TXFS_GPIO4_IO31       0x0
+			>;
+		};
+
+		pinctrl_tpm1_sb_iotgimx8_ied: tpm1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART4_RXD_GPIO5_IO28	0x0
+			>;
+		};
+	};
+};
