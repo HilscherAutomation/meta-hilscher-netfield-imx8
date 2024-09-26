@@ -130,3 +130,18 @@
 #include "netfield-compact-x8m-revx-ied.dtsi"
 #include "netfield-compact-x8m-revx-can.dtsi"
 #include "netfield-compact-x8m-revx-poed.dtsi"
+
+/* NOTE:
+ *   Part of the bugfix to prevent IRQ storms on UART3.
+ *   This is required due to a hardware bug.
+ */
+&iomuxc {
+	ucm-imx8m-mini {
+		pinctrl_uart3: uart3grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART3_RXD_UART3_DCE_RX	0x149
+				MX8MM_IOMUXC_UART3_TXD_UART3_DCE_TX	0x149
+			>;
+		};
+	};
+};
