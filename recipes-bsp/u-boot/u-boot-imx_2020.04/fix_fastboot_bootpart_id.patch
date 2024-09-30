@@ -1,0 +1,12 @@
+When flashing bootloader via fastboot the binary is flasehd in the wrong partition.
+--- a/include/fb_fsl.h.org	2024-09-26 13:31:24.214038167 +0200
++++ b/include/fb_fsl.h	2024-09-26 13:07:40.555651320 +0200
+@@ -34,7 +34,7 @@
+ /* Uneraseable partition */
+ #define FASTBOOT_PTENTRY_FLAGS_UNERASEABLE            0x00000800
+ 
+-#define FASTBOOT_MMC_BOOT_PARTITION_ID  1
++#define FASTBOOT_MMC_BOOT_PARTITION_ID  0
+ #define FASTBOOT_MMC_USER_PARTITION_ID  0
+ #define FASTBOOT_MMC_NONE_PARTITION_ID -1
+ #define FASTBOOT_MMC_BOOT1_PARTITION_ID  2
