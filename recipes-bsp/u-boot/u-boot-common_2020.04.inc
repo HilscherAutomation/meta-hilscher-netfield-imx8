@@ -26,6 +26,7 @@ SRC_URI_append += " \
 	file://add_gpio_controlled_boot_menu.patch \
 	file://add_gpio-hog_scope.patch \
 	${@bb.utils.contains('MACHINE_FEATURES', 'u-boot-gpio-menu', 'file://gpio-menu.cfg', '' ,d)} \
+	file://fix_fastboot_bootpart_id.patch \
 	"
 
 SRC_URI_append_netfield-iolink-edge-gw-revx += "file://netfield-iolink-edge-gw-revx.cfg"
