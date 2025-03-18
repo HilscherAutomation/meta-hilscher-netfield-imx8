@@ -22,10 +22,7 @@ platform_init_run() {
 	create_gpio 0 13 "in"  "tpm_gpio"
 
 	__debug "Exporting the platform leds ..."
-	for led in edge_green edge_yellow wlan_blue; do
+	for led in edge_green edge_yellow wlan_blue cloud_red cloud_green; do
 		ln -s /sys/class/leds/${led}/brightness /var/platform/led_${led}
-	done
-	for led in cloud_red cloud_green; do
-		ln -s /sys/class/leds/${led} /var/platform/led_${led}
 	done
 }
