@@ -55,6 +55,8 @@ SRC_URI:append = " file://add_st_tpm2_i2c_support.patch \
 
 SRC_URI:append = " file://prevents_error_messages_related_to_u-boot,gpio-hog_DT_properties.patch"
 
+SRC_URI:append = " file://compulab-rtc-abx80-fix-false-fail-caused-by-osc-glitch.patch"
+
 # ------------------------------------------------------------------------------
 export_devicetree_settings() {
 	[ "$1" = "-v" ] && verbose=1

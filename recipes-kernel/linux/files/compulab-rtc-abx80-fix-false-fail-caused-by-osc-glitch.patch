@@ -1,0 +1,78 @@
+From d5e36ffae96283aeeb77471278a0bbfdbde238e8 Mon Sep 17 00:00:00 2001
+From: Kirill Kapranov <kirill.kapranov@compulab.co.il>
+Date: Thu, 5 Oct 2023 22:09:50 +0000
+Subject: [PATCH] rtc:abx80: fix false fail caused by osc glitch
+
+Signed-off-by: Kirill Kapranov <kirill.kapranov@compulab.co.il>
+---
+ drivers/rtc/rtc-abx80x.c | 43 ++++++++++++++++++++++++----------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/rtc/rtc-abx80x.c b/drivers/rtc/rtc-abx80x.c
+index 506b3d9c46e9..8f11af17993f 100644
+--- a/drivers/rtc/rtc-abx80x.c
++++ b/drivers/rtc/rtc-abx80x.c
+@@ -196,22 +196,6 @@ static int abx80x_rtc_read_time(struct device *dev, struct rtc_time *tm)
+ 	unsigned char buf[8];
+ 	int err, flags, rc_mode = 0;
+
+-	/* Read the Oscillator Failure only in XT mode */
+-	rc_mode = abx80x_is_rc_mode(client);
+-	if (rc_mode < 0)
+-		return rc_mode;
+-
+-	if (!rc_mode) {
+-		flags = i2c_smbus_read_byte_data(client, ABX8XX_REG_OSS);
+-		if (flags < 0)
+-			return flags;
+-
+-		if (flags & ABX8XX_OSS_OF) {
+-			dev_err(dev, "Oscillator failure, data is invalid.\n");
+-			return -EINVAL;
+-		}
+-	}
+-
+ 	err = i2c_smbus_read_i2c_block_data(client, ABX8XX_REG_HTH,
+ 					    sizeof(buf), buf);
+ 	if (err < 0) {
+@@ -226,6 +210,31 @@ static int abx80x_rtc_read_time(struct device *dev, struct rtc_time *tm)
+ 	tm->tm_mday = bcd2bin(buf[ABX8XX_REG_DA] & 0x3F);
+ 	tm->tm_mon = bcd2bin(buf[ABX8XX_REG_MO] & 0x1F) - 1;
+ 	tm->tm_year = bcd2bin(buf[ABX8XX_REG_YR]) + 100;
++
++	/* Read the Oscillator Failure only in XT mode */
++	rc_mode = abx80x_is_rc_mode(client);
++	if (rc_mode < 0)
++		return rc_mode;
++/* Compare the year value against this for data sanity check.
++ * In case of the battery goes flat, the year counter drops to 0x00 (tm_year = 100),
++ * whereas in case of oscillator glitch the year shall be over 2022
++ */
++#define YEAR_2022 122
++	if (!rc_mode) {
++		flags = i2c_smbus_read_byte_data(client, ABX8XX_REG_OSS);
++		if (flags < 0)
++			return flags;
++
++		if (flags & ABX8XX_OSS_OF) {
++			if (YEAR_2022 > tm->tm_year) {
++				dev_err(dev, "Oscillator failure, data is invalid.\n");
++				return -EINVAL;
++			}
++			else {
++				dev_warn(dev, "Failure flag set, data may be invalid.\n");
++			}
++		}
++	}
+
+ 	return 0;
+ }
+@@ -1229,7 +1238,7 @@ static int abx80x_probe(struct i2c_client *client)
+ 		return err;
+ 	}
+ 	else
+-		dev_err(&client->dev, "CCCCreate sysfs group: %d\n", 0);
++		dev_err(&client->dev, "Create sysfs group: %d\n", 0);
+
+ 	return devm_rtc_register_device(priv->rtc);
+ }
