@@ -19,9 +19,6 @@
         /delete-property/ mmc0; /* &usdhc2 (SD-Card) */
 		mmc1 = &usdhc3; /* eMMC */
 		/delete-property/ mmc2;
-
-		rtc0 = &rtc0;
-		rtc1 = &snvs_rtc;
 	};
 
 	config {
@@ -371,6 +368,11 @@
 
 &snvs {
 	status = "okay";
+};
+
+/* RTC */
+&snvs_rtc {
+	status = "disabled";
 };
 
 &snvs_pwrkey {

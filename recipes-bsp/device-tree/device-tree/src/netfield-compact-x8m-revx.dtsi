@@ -124,6 +124,11 @@
 	};
 };
 
+/* RTC */
+&snvs_rtc {
+	status = "disabled";
+};
+
 /* -------------------------------------------------------------------------- */
 
 // Add support for Industrial I/O add-on modules
